@@ -196,10 +196,9 @@ class AutoFilm(_PluginBase):
         self.update_config({
             "enabled": self._enabled,
             "onlyonce": self._onlyonce,
-            "rebuild": self._rebuild,
-            "copy_files": self._copy_files,
             "cron": self._cron,
-            "monitor_confs": self._monitor_confs
+            "download_subtitle": self._download_subtitle,
+            "autofilm_confs": self._autofilm_confs
         })
 
     def get_state(self) -> bool:
@@ -356,7 +355,7 @@ class AutoFilm(_PluginBase):
             "enabled": False,
             "cron": "",
             "onlyonce": False,
-            "download_subttile": False,
+            "download_subtitle": False,
             "autofilm_confs": ""
         }
 
