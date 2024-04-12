@@ -187,7 +187,7 @@ class AlistStrm(_PluginBase):
         url_list = alist_url + "/api/fs/list"
         payload_list = json.dumps({
             "path": path,
-            "password": alist_password,  
+            "password": "",  
             "page": 1,
             "per_page": 0,
             "refresh": False
