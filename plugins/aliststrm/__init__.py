@@ -136,7 +136,7 @@ class AlistStrm(_PluginBase):
         生成Strm文件
         """
 
-      def __update_config(self):
+     def __update_config(self):
         """
         更新配置
         """
