@@ -13,6 +13,20 @@ from typing import List, Dict, Any, Tuple
 class AlistStrm(_PluginBase):
     plugin_name = "AlistStrm"
     plugin_desc = "生成 Alist 云盘视频的 Strm 文件"
+    # 插件图标
+    plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
+    # 插件版本
+    plugin_version = "1.0"
+    # 插件作者
+    plugin_author = "kufei326"
+    # 作者主页
+    author_url = "https://github.com/kufei326"
+    # 插件配置项ID前缀
+    plugin_config_prefix = "aliststrm_"
+    # 加载顺序
+    plugin_order = 26
+    # 可使用的用户级别
+    auth_level = 1
 
     def __init__(self, config_data: dict):
         self.root_path = config_data.get('root_path', "/path/to/root")
