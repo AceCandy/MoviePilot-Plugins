@@ -6,6 +6,7 @@ import requests
 import json
 
 from app.plugins import _PluginBase
+from app.core.event import eventmanager, Event
 from app.log import logger
 from typing import List, Dict, Any, Tuple
 
