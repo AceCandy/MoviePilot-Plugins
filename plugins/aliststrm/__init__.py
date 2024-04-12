@@ -35,18 +35,7 @@ class AlistStrm(_PluginBase):
     _onlyonce = False
     _download_subtitle = False
 
-    _autofilm_confs = None
-
-    _try_max = 15
-
-    _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
-    _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')「    _enabled = False
-    _cron = None
-    _monitor_confs = None
-    _onlyonce = False
-    _download_subtitle = False
-
-    _autofilm_confs = None
+    _aliststrm_confs = None
 
     _try_max = 15
 
