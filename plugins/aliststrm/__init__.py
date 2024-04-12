@@ -196,7 +196,7 @@ class AlistStrm(_PluginBase):
         })
         headers_list = {
             'Authorization': token,
-            'User-Agent': _UserAgent,
+            'User-Agent': UserAgent,
             'Content-Type': 'application/json'
         }
         try:
