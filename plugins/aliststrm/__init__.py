@@ -184,9 +184,9 @@ class AlistStrm(_PluginBase):
                     }
 
     def __list_directory(self, path):
-    api_base_url = self.api_base_url  # Correct
-    UserAgent = self.UserAgent  # Correct
-    url_list = api_base_url + "/fs/list"
+        api_base_url = self.api_base_url  # Correct
+        UserAgent = self.UserAgent  # Correct
+        url_list = api_base_url + "/fs/list"
         payload_list = json.dumps({
             "path": path,
             "password": alist_password,  # Change to alist_password
