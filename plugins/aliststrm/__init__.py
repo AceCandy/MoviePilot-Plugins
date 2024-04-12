@@ -1,13 +1,14 @@
-import os
 import urllib.parse
-from time import sleep
+import os
 import requests
 import json
 import configparser
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+from time import sleep
 
 import pytz
+from datetime import datetime, timedelta
 from typing import Any, List, Dict, Tuple, Optional
 
 from app.core.event import eventmanager, Event
@@ -224,7 +225,7 @@ class AlistStrm(_PluginBase):
             elif isinstance(item, dict):  # If it's a directory, recursively process it
                 new_directory = os.path.join(target_directory, name)
                 os.makedirs(new_directory, exist_ok=True)
-                self.__create_strm_files(item, target_directory, base_url, os.path.join(current_path, name))
+                self.__create_strm_files(item, new_directory, base_url)
 
     def __is_video_file(self, filename):
         video_extensions = ('.mp4', '.mkv', '.avi', '.mov', '.flv', '.wmv')  # Add more video formats if necessary
