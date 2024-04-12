@@ -42,7 +42,7 @@ class AlistStrm(_PluginBase):
     
     _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
     _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')
-
+    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"
     # 定时器
     _scheduler: Optional[BackgroundScheduler] = None
 
@@ -194,7 +194,7 @@ class AlistStrm(_PluginBase):
         })
         headers_list = {
             'Authorization': token,
-            'User-Agent': UserAgent,
+            'User-Agent': self.UserAgent,
             'Content-Type': 'application/json'
         }
         try:
