@@ -206,8 +206,8 @@ class AlistStrm(_PluginBase):
             response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
             return json.loads(response_list.text)
 
-    def __create_strm_files(self, local_path, target_directory, base_url, alist_url, root_path):
-        for name, item in local_path.items():
+def __create_strm_files(self, local_path, target_directory, base_url, alist_url, root_path):
+    for name, item in local_path.items():
         video_base_url = alist_url + '/d' + root_path + '/'  # 修改为video_base_url，避免与参数base_url混淆
         if isinstance(item, dict) and item.get('type') == 'file' and self.__is_video_file(name):
             strm_filename = name.rsplit('.', 1)[0] + '.strm'
@@ -225,7 +225,6 @@ class AlistStrm(_PluginBase):
             new_directory = os.path.join(target_directory, name)
             os.makedirs(new_directory, exist_ok=True)
             self.__create_strm_files(item, new_directory, base_url, alist_url, root_path)  # 传递alist_url和root_path
-
 
     def __is_video_file(self, filename):
         video_extensions = ('.mp4', '.mkv', '.avi', '.mov', '.flv', '.wmv')  # Add more video formats if necessary
