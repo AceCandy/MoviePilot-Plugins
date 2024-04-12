@@ -155,7 +155,10 @@ class AlistStrm(_PluginBase):
             json.dump(json_structure, f, indent=4)
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
-    return [
+        """
+        拼装插件配置页面，需要返回两块数据：1、页面配置；2、数据结构
+        """
+        return [
         {
             'component': 'VForm',
             'content': [
