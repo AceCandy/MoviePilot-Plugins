@@ -183,10 +183,10 @@ class AlistStrm(_PluginBase):
                     }
 
     def __list_directory(self, path):
-        url_list = webdav_url + "/fs/list"
+        url_list = alist_url + "/api/fs/list"
         payload_list = json.dumps({
             "path": path,
-            "password": webdav_password,
+            "password": alist_password,
             "page": 1,
             "per_page": 0,
             "refresh": False
