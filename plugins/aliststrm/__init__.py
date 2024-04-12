@@ -1,10 +1,11 @@
 import os
 import urllib.parse
 from time import sleep
-from pathlib import Path
 import requests
 import json
-from datetime import datetime, timedelta
+import configparser
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 import pytz
 from typing import Any, List, Dict, Tuple, Optional
@@ -31,21 +32,20 @@ class AlistStrm(_PluginBase):
 
     _enabled = False
     _cron = None
-    _monitor_confs = None
     _onlyonce = False
     _download_subtitle = False
 
-    _aliststrm_confs = None
+    _liststrm_confs = None
 
     _try_max = 15
 
     _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
     _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')
+
     # 定时器
     _scheduler: Optional[BackgroundScheduler] = None
 
-    def init_plugin(self, config: Optional[Dict[str, Any]] = None):
-  
+    def init_plugin(self, config: dict = None):
         if config:
             self._enabled = config.get("enabled")
             self._cron = config.get("cron")
@@ -86,10 +86,7 @@ class AlistStrm(_PluginBase):
                 self._scheduler.start()
 
     @eventmanager.register(EventType.PluginAction)
-    def scan(self, event: Optional[Event] = None):
-        """
-        扫描
-        """
+    def scan(self, event: Event = None):
         if not self._enabled:
             logger.error("aliststrm插件未开启")
             return
@@ -109,18 +106,18 @@ class AlistStrm(_PluginBase):
         logger.info("AutoFilm生成Strm任务开始")
         
         # 生成strm文件
-        for aliststrm_conf in self._liststrm_confs:
-            # 格式 Webdav服务器地址:账号:密码:本地目录:根目录
-            if not aliststrm_conf:
+        for liststrm_conf in self._liststrm_confs:
+            # 格式 Webdav服务器地址:账号:密码:本地目录
+            if not liststrm_conf:
                 continue
-            if str(aliststrm_conf).count("#") == 4:
-                alist_url = str(aliststrm_conf).split("#")[0]
-                alist_user = str(aliststrm_conf).split("#")[1]
-                alist_password = str(aliststrm_conf).split("#")[2]
-                local_path = str(aliststrm_conf).split("#")[3]
-                root_path = str(aliststrm_conf).split("#")[4]
+            if str(liststrm_conf).count("#") == 4:
+                alist_url = str(liststrm_conf).split("#")[0]
+                alist_user = str(liststrm_conf).split("#")[1]
+                alist_password = str(liststrm_conf).split("#")[2]
+                local_path = str(liststrm_conf).split("#")[3]
+                root_path = str(liststrm_conf).split("#")[4]
             else:
-                logger.error(f"{aliststrm_conf} 格式错误")
+                logger.error(f"{liststrm_conf} 格式错误")
                 continue
 
             # 生成strm文件
@@ -131,22 +128,106 @@ class AlistStrm(_PluginBase):
             self.post_message(channel=event.event_data.get("channel"),
                               title="云盘strm生成任务完成！",
                               userid=event.event_data.get("user"))
+                              
     def __generate_strm(self, webdav_url:str, webdav_account:str, webdav_password:str, local_path:str, root_path:str):
-        """
-        生成Strm文件
-        """
-        pass
+        for path in self.__traverse_directory(local_path):
+            self.__create_strm_files(path, root_path, webdav_url)
+
+    def __traverse_directory(self, path):
+        traversed_paths = []
+        json_structure = {}
+        self.__traverse_directory_recursively(path, json_structure, traversed_paths)
+        return traversed_paths
+
+    def __traverse_directory_recursively(self, path, json_structure, traversed_paths):
+        directory_info = self.__list_directory(path)
+        if directory_info.get('data') and directory_info['data'].get('content'):
+            for item in directory_info['data']['content']:
+                if item['is_dir']:  # If it's a directory
+                    new_path = os.path.join(path, item['name'])
+                    sleep(1)
+                    if new_path in traversed_paths:
+                        continue
+                    traversed_paths.append(new_path)
+                    new_json_object = {}
+                    json_structure[item['name']] = new_json_object
+                    self.__traverse_directory_recursively(new_path, new_json_object, traversed_paths)  # Recursive call to traverse subdirectories
+                elif self.__is_video_file(item['name']):  # If it's a video file
+                    json_structure[item['name']] = {
+                        'type': 'file',
+                        'size': item['size'],
+                        'modified': item['modified']
+                    }
+
+    def __list_directory(self, path):
+        url_list = webdav_url + "/fs/list"
+        payload_list = json.dumps({
+            "path": path,
+            "password": webdav_password,
+            "page": 1,
+            "per_page": 0,
+            "refresh": False
+        })
+        headers_list = {
+            'Authorization': token,
+            'User-Agent': UserAgent,
+            'Content-Type': 'application/json'
+        }
+        try:
+            response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
+            return json.loads(response_list.text)
+
+        except Exception as x:
+            print(f"Error encountered: {x.__class__.__name__}")
+            print("Retrying...")
+            sleep(5)
+            response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
+            return json.loads(response_list.text)
+
+    def __create_strm_files(self, local_path, target_directory, base_url):
+        for name, item in local_path.items():
+            if isinstance(item, dict) and item.get('type') == 'file' and self.__is_video_file(name):
+                strm_filename = name.rsplit('.', 1)[0] + '.strm'
+                strm_path = os.path.join(target_directory, strm_filename)
+
+                # Encode the entire file path
+                encoded_file_path = urllib.parse.quote(os.path.join(current_path.replace('\\', '/'), name))
+
+                # Concatenate the complete video URL
+                video_url = base_url + encoded_file_path
+
+                with open(strm_path, 'w', encoding='utf-8') as strm_file:
+                    strm_file.write(video_url)
+            elif isinstance(item, dict):  # If it's a directory, recursively process it
+                new_directory = os.path.join(target_directory, name)
+                os.makedirs(new_directory, exist_ok=True)
+                self.__create_strm_files(item, target_directory, base_url, os.path.join(current_path, name))
+
+    def __is_video_file(self, filename):
+        video_extensions = ('.mp4', '.mkv', '.avi', '.mov', '.flv', '.wmv')  # Add more video formats if necessary
+        return any(filename.lower().endswith(ext) for ext in video_extensions)
+
+    def __requests_retry_session(self, retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None):
+        session = session or requests.Session()
+        retry = Retry(
+            total=retries,
+            read=retries,
+            connect=retries,
+            backoff_factor=backoff_factor,
+            status_forcelist=status_forcelist,
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        return session
 
     def __update_config(self):
-        """
-        更新配置
-        """
         self.update_config({
             "enabled": self._enabled,
-            "onlyonce": self._onlyonce,
             "cron": self._cron,
+            "onlyonce": self._onlyonce,
             "download_subtitle": self._download_subtitle,
-            "liststrm_confs": "\n".join(self._liststrm_confs) if self._liststrm_confs else ""
+            "liststrm_confs": self._liststrm_confs
         })
 
     def get_state(self) -> bool:
@@ -154,10 +235,6 @@ class AlistStrm(_PluginBase):
 
     @staticmethod
     def get_command() -> List[Dict[str, Any]]:
-        """
-        定义远程控制命令
-        :return: 命令关键字、事件、描述、附带数据
-        """
         return [{
             "cmd": "/alist_strm",
             "event": EventType.PluginAction,
@@ -169,19 +246,9 @@ class AlistStrm(_PluginBase):
         }]
 
     def get_service(self) -> List[Dict[str, Any]]:
-        """
-        注册插件公共服务
-        [{
-            "id": "服务ID",
-            "name": "服务名称",
-            "trigger": "触发器：cron/interval/date/CronTrigger.from_crontab()",
-            "func": self.xxx,
-            "kwargs": {} # 定时器参数
-        }]
-        """
         if self._enabled and self._cron:
             return [{
-                "id": "AlistStrm",
+                "id": "aliststrm",
                 "name": "Alist云盘strm文件生成服务",
                 "trigger": CronTrigger.from_crontab(self._cron),
                 "func": self.scan,
@@ -193,9 +260,6 @@ class AlistStrm(_PluginBase):
         pass
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
-        """
-        拼装插件配置页面，需要返回两块数据：1、页面配置；2、数据结构
-        """
         return [
             {
                 'component': 'VForm',
@@ -288,9 +352,9 @@ class AlistStrm(_PluginBase):
                                         'component': 'VTextarea',
                                         'props': {
                                             'model': 'liststrm_confs',
-                                            'label': 'aliststrm配置文件',
+                                            'label': 'liststrm配置文件',
                                             'rows': 5,
-                                            'placeholder': 'alist服务器地址#账号#密码#本地目录#alist开始目录'
+                                            'placeholder': 'Webdav服务器地址#账号#密码#本地目录#Webdav开始目录'
                                         }
                                     }
                                 ]
@@ -311,9 +375,6 @@ class AlistStrm(_PluginBase):
         pass
 
     def stop_service(self):
-        """
-        退出插件
-        """
         try:
             if self._scheduler:
                 self._scheduler.remove_all_jobs()
@@ -321,4 +382,4 @@ class AlistStrm(_PluginBase):
                     self._scheduler.shutdown()
                 self._scheduler = None
         except Exception as e:
-            logger.error(f"退出插件失败：{str(e)}")
+            logger.error(f"Exiting plugin failed: {str(e)}")
