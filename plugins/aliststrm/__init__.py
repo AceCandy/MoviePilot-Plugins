@@ -184,7 +184,7 @@ class AlistStrm(_PluginBase):
                     }
 
     def __list_directory(self, path):
-        url_list = alist_url + "/api/fs/list"
+        url_list = api_base_url + "/fs/list"
         payload_list = json.dumps({
             "path": path,
             "password": alist_password,
