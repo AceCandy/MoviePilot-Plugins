@@ -42,7 +42,7 @@ class AlistStrm(_PluginBase):
     
     _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
     _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')
-    _api_base_url = site_url + "/api"
+    _api_base_url = alist_url + "/api"
     _UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"
     _login_path = "/auth/login"
     _url_login = api_base_url + login_path
