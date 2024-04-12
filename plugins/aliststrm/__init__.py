@@ -206,10 +206,10 @@ class AlistStrm(_PluginBase):
             response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
             return json.loads(response_list.text)
 
-    def __create_strm_files(self, local_path, target_directory, base_url, alist_url, root_path):
+    def __create_strm_files(self, local_path, target_directory, alist_url, root_path):
         for name, item in local_path.items():
             base_url = alist_url + '/d' + root_path + '/'
-            if isinstance(item, dict) and item.get('type') == 'file' and self.__is_video_file(name):
+            if isinstance(item, dict) and item.get('type') == 'file' and _video_formats:
                 strm_filename = name.rsplit('.', 1)[0] + '.strm'
                 strm_path = os.path.join(target_directory, strm_filename)
 
@@ -224,11 +224,8 @@ class AlistStrm(_PluginBase):
             elif isinstance(item, dict):  # If it's a directory, recursively process it
                 new_directory = os.path.join(target_directory, name)
                 os.makedirs(new_directory, exist_ok=True)
-                self.__create_strm_files(item, new_directory, base_url)
 
-    def __is_video_file(self, filename):
-        video_extensions = ('.mp4', '.mkv', '.avi', '.mov', '.flv', '.wmv')  # Add more video formats if necessary
-        return any(filename.lower().endswith(ext) for ext in video_extensions)
+    
 
     def __requests_retry_session(self, retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None):
         session = session or requests.Session()
