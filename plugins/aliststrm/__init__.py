@@ -120,8 +120,14 @@ class AlistStrm(_PluginBase):
                 logger.error(f"{liststrm_conf} 格式错误")
                 continue
 
+            # 获取token
+            token = self.get_token(alist_url, alist_user, alist_password)
+            if not token:
+                logger.error(f"无法获取token: {alist_url}")
+                continue
+
             # 生成strm文件
-            self.__generate_strm(alist_url, alist_user, alist_password, local_path, root_path)
+            self.__generate_strm(alist_url, alist_user, alist_password, local_path, root_path, token)
 
         logger.info("云盘strm生成任务完成")
         if event:
@@ -129,9 +135,9 @@ class AlistStrm(_PluginBase):
                               title="云盘strm生成任务完成！",
                               userid=event.event_data.get("user"))
                               
-    def __generate_strm(self, webdav_url:str, webdav_account:str, webdav_password:str, local_path:str, root_path:str):
+    def __generate_strm(self, webdav_url:str, webdav_account:str, webdav_password:str, local_path:str, root_path:str, token:str):
         for path in self.__traverse_directory(local_path):
-            self.__create_strm_files(path, root_path, webdav_url)
+            self.__create_strm_files(path, root_path, webdav_url, token)
 
     def __traverse_directory(self, path):
         traversed_paths = []
@@ -159,7 +165,7 @@ class AlistStrm(_PluginBase):
                         'modified': item['modified']
                     }
 
-    def __list_directory(self, path):
+    def __list_directory(self, path, token):
         url_list = webdav_url + "/fs/list"
         payload_list = json.dumps({
             "path": path,
@@ -184,7 +190,29 @@ class AlistStrm(_PluginBase):
             response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
             return json.loads(response_list.text)
 
-    def __create_strm_files(self, local_path, target_directory, base_url):
+    def get_token(self, url:str, username:str, password:str) -> str:
+        api_base_url = url + "/api"
+        login_path = "/auth/login"
+        url_login = api_base_url + login_path
+
+        payload_login = json.dumps({
+            "username": username,
+            "password": password
+        })
+
+        headers_login = {
+            'User-Agent': UserAgent,
+            'Content-Type': 'application/json'
+        }
+
+        response_login = requests.post(url_login, headers=headers_login, data=payload_login)
+        if response_login.status_code == 200:
+            token = json.loads(response_login.text)['data']['token']
+            return token
+        else:
+            return ""
+
+    def __create_strm_files(self, local_path, target_directory, base_url, token):
         for name, item in local_path.items():
             if isinstance(item, dict) and item.get('type') == 'file' and self.__is_video_file(name):
                 strm_filename = name.rsplit('.', 1)[0] + '.strm'
@@ -201,7 +229,7 @@ class AlistStrm(_PluginBase):
             elif isinstance(item, dict):  # If it's a directory, recursively process it
                 new_directory = os.path.join(target_directory, name)
                 os.makedirs(new_directory, exist_ok=True)
-                self.__create_strm_files(item, target_directory, base_url, os.path.join(current_path, name))
+                self.__create_strm_files(item, target_directory, base_url, token, os.path.join(current_path, name))
 
     def __is_video_file(self, filename):
         video_extensions = ('.mp4', '.mkv', '.avi', '.mov', '.flv', '.wmv')  # Add more video formats if necessary
