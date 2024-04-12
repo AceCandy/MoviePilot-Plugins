@@ -132,15 +132,15 @@ class AlistStrm(_PluginBase):
                               title="云盘strm生成任务完成！",
                               userid=event.event_data.get("user"))
                               
-    def __get_token(self, alist_url: str, alist_user: str, alist_password: str) -> str:
-        api_base_url = alist_url + "/api"
+    def __get_token(self, url: str, username: str, password: str) -> str:
+        api_base_url = url + "/api"
         UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"
         login_path = "/auth/login"
         url_login = api_base_url + login_path
 
         payload_login = json.dumps({
-            "username": alist_user,
-            "password": alist_password
+            "username": username,
+            "password": password
         })
 
         headers_login = {
@@ -152,7 +152,7 @@ class AlistStrm(_PluginBase):
         token = json.loads(response_login.text)['data']['token']
         return token
 
-    def __generate_strm(self, alist_url:str, token:str, local_path:str, root_path:str):
+    def __generate_strm(self, webdav_url:str, token:str, local_path:str, root_path:str):
         for path in self.__traverse_directory(local_path):
             self.__create_strm_files(path, root_path, webdav_url)
 
@@ -183,7 +183,7 @@ class AlistStrm(_PluginBase):
                     }
 
     def __list_directory(self, path):
-        url_list = alist_url + "/api/fs/list"
+        url_list = webdav_url + "/fs/list"
         payload_list = json.dumps({
             "path": path,
             "password": webdav_password,
