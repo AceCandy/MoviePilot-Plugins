@@ -15,4 +15,12 @@
     "author": "Akimio521",
     "level": 2
   }
+    "Autostrm": {
+    "name": "Autostrm—MoviePilot插件版",
+    "description": "定时扫描Alist云盘，自动生成Strm文件。",
+    "version": "1.0",
+    "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
+    "author": "kufei326",
+    "level": 2
+    }
 }
