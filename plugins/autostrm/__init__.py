@@ -198,7 +198,6 @@ class AutoStrm(_PluginBase):
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
         session.mount('https://', adapter)
-        return session
 
     def __update_config(self):
         """
