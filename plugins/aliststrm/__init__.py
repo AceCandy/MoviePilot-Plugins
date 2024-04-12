@@ -209,7 +209,7 @@ class AlistStrm(_PluginBase):
     def __create_strm_files(self, local_path, target_directory, alist_url, root_path):
         for name, item in local_path.items():
             base_url = alist_url + '/d' + root_path + '/'
-            if isinstance(item, dict) and item.get('type') == 'file' and _video_formats:
+            if isinstance(item, dict) and item.get('type') == 'file' and self._video_formats:
                 strm_filename = name.rsplit('.', 1)[0] + '.strm'
                 strm_path = os.path.join(target_directory, strm_filename)
 
