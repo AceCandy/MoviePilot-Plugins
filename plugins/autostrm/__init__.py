@@ -1,8 +1,12 @@
-import os
-from datetime import datetime, timedelta
-from webdav3.client import Client
-import time
+import urllib
+from time import sleep
 import requests
+import json
+import configparser
+import os
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
 
 import pytz
 from typing import Any, List, Dict, Tuple, Optional
