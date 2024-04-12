@@ -183,10 +183,8 @@ class AlistStrm(_PluginBase):
                         'modified': item['modified']
                     }
 
-    def __list_directory(self, path):
-        api_base_url = self.api_base_url  # Correct
-        UserAgent = self.UserAgent  # Correct
-        url_list = api_base_url + "/fs/list"
+    def __list_directory(self, path, alist_url, token):
+        url_list = alist_url + "/api/fs/list"
         payload_list = json.dumps({
             "path": path,
             "password": alist_password,  # Change to alist_password
