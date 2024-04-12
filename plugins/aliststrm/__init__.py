@@ -29,18 +29,29 @@ class AlistStrm(_PluginBase):
     plugin_order = 26
     auth_level = 1
 
-    _enabled: bool = False
-    _cron: Optional[str] = None
-    _onlyonce: bool = False
-    _download_subtitle: bool = False
+    _enabled = False
+    _cron = None
+    _monitor_confs = None
+    _onlyonce = False
+    _download_subtitle = False
 
-    _liststrm_confs: Optional[List[str]] = None
+    _autofilm_confs = None
 
-    _try_max: int = 15
+    _try_max = 15
 
-    _video_formats: Tuple[str, ...] = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
-    _subtitle_formats: Tuple[str, ...] = ('.ass', '.srt', '.ssa', '.sub')
+    _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
+    _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')「    _enabled = False
+    _cron = None
+    _monitor_confs = None
+    _onlyonce = False
+    _download_subtitle = False
 
+    _autofilm_confs = None
+
+    _try_max = 15
+
+    _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
+    _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')
     # 定时器
     _scheduler: Optional[BackgroundScheduler] = None
 
