@@ -4,6 +4,7 @@ from time import sleep
 from pathlib import Path
 import requests
 import json
+from datetime import datetime, timedelta
 
 import pytz
 from typing import Any, List, Dict, Tuple, Optional
@@ -134,8 +135,9 @@ class AlistStrm(_PluginBase):
         """
         生成Strm文件
         """
+        pass
 
-     def __update_config(self):
+    def __update_config(self):
         """
         更新配置
         """
