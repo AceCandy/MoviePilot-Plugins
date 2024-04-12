@@ -21,6 +21,8 @@ class AutoStrm(_PluginBase):
     plugin_name = "AutoStrm"
     # 插件描述
     plugin_desc = "定时扫描Alist云盘，自动生成Strm文件。"
+    # 插件图标
+    plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
     plugin_version = "1.0"
     # 插件作者
@@ -208,6 +210,25 @@ class AutoStrm(_PluginBase):
             "Password": self._password
         })
 
+    def get_state(self) -> bool:
+        return self._enabled
+
+    @staticmethod
+    def get_command() -> List[Dict[str, Any]]:
+        """
+        定义远程控制命令
+        :return: 命令关键字、事件、描述、附带数据
+        """
+        return [{
+            "cmd": "/auto_strm",
+            "event": EventType.PluginAction,
+            "desc": "Alist云盘Strm文件生成",
+            "category": "",
+            "data": {
+                "action": "auto_strm"
+            }
+        }]
+
     def get_service(self) -> List[Dict[str, Any]]:
         """
         注册插件公共服务
@@ -228,6 +249,9 @@ class AutoStrm(_PluginBase):
                 "kwargs": {}
             }]
         return []
+        
+        def get_api(self) -> List[Dict[str, Any]]:
+        pass
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
         """
@@ -270,6 +294,9 @@ class AutoStrm(_PluginBase):
             "Username": "",
             "Password": ""
         }
+
+    def get_page(self) -> List[dict]:
+        pass
 
     def stop_service(self):
         """
