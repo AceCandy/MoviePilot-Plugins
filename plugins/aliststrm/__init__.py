@@ -154,17 +154,17 @@ class AlistStrm(_PluginBase):
         return token
 
     def __generate_strm(self, alist_url:str, token:str, alist_password:str, local_path:str, root_path:str):
-        for path in self.__traverse_directory(local_path):
-            self.__create_strm_files(path, root_path, alist_url)  # Fixed typo here
+        for path in self.__traverse_directory(local_path, alist_url, token):  # 将alist_url和token传递给__traverse_directory方法
+            self.__create_strm_files(path, root_path, alist_url)  
 
-    def __traverse_directory(self, path):
+    def __traverse_directory(self, path, alist_url, token):  # 添加alist_url和token参数
         traversed_paths = []
         json_structure = {}
-        self.__traverse_directory_recursively(path, json_structure, traversed_paths)
+        self.__traverse_directory_recursively(path, json_structure, traversed_paths, alist_url, token)  # 将alist_url和token传递给__traverse_directory_recursively方法
         return traversed_paths
 
-    def __traverse_directory_recursively(self, path, json_structure, traversed_paths):
-        directory_info = self.__list_directory(path)
+    def __traverse_directory_recursively(self, path, json_structure, traversed_paths, alist_url, token):  # 添加alist_url和token参数
+        directory_info = self.__list_directory(path, alist_url, token)  # 添加alist_url和token参数
         if directory_info.get('data') and directory_info['data'].get('content'):
             for item in directory_info['data']['content']:
                 if item['is_dir']:  # If it's a directory
@@ -175,7 +175,7 @@ class AlistStrm(_PluginBase):
                     traversed_paths.append(new_path)
                     new_json_object = {}
                     json_structure[item['name']] = new_json_object
-                    self.__traverse_directory_recursively(new_path, new_json_object, traversed_paths)  # Recursive call to traverse subdirectories
+                    self.__traverse_directory_recursively(new_path, new_json_object, traversed_paths, alist_url, token)  # 添加alist_url和token参数，递归调用
                 elif self.__is_video_file(item['name']):  # If it's a video file
                     json_structure[item['name']] = {
                         'type': 'file',
@@ -183,11 +183,11 @@ class AlistStrm(_PluginBase):
                         'modified': item['modified']
                     }
 
-    def __list_directory(self, path, alist_url, token):
+    def __list_directory(self, path, alist_url, token):  # 添加alist_url和token参数
         url_list = alist_url + "/api/fs/list"
         payload_list = json.dumps({
             "path": path,
-            "password": alist_password,  # Change to alist_password
+            "password": alist_password,  
             "page": 1,
             "per_page": 0,
             "refresh": False
