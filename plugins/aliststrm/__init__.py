@@ -135,17 +135,15 @@ class AlistStrm(_PluginBase):
                               
     def __get_token(self, url: str, username: str, password: str) -> str:
         api_base_url = url + "/api"
-        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"
         login_path = "/auth/login"
         url_login = api_base_url + login_path
-
         payload_login = json.dumps({
             "username": username,
             "password": password
         })
 
         headers_login = {
-            'User-Agent': UserAgent,
+            'User-Agent': self.UserAgent,
             'Content-Type': 'application/json'
         }
 
@@ -208,8 +206,9 @@ class AlistStrm(_PluginBase):
             response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
             return json.loads(response_list.text)
 
-    def __create_strm_files(self, local_path, target_directory, base_url):
+    def __create_strm_files(self, local_path, target_directory, base_url, alist_url, root_path):
         for name, item in local_path.items():
+            base_url = alist_url + '/d' + root_path + '/'
             if isinstance(item, dict) and item.get('type') == 'file' and self.__is_video_file(name):
                 strm_filename = name.rsplit('.', 1)[0] + '.strm'
                 strm_path = os.path.join(target_directory, strm_filename)
