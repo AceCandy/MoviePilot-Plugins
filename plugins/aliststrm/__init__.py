@@ -154,7 +154,7 @@ class AlistStrm(_PluginBase):
         with open('directory_structure.json', 'w') as f:
             json.dump(json_structure, f, indent=4)
 
-    def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
+def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
     return [
         {
             'component': 'VForm',
@@ -243,6 +243,7 @@ class AlistStrm(_PluginBase):
         "username": "admin",
         "password": "password"
     }
+
 
 
     def get_command(self) -> List[Dict[str, Any]]:
