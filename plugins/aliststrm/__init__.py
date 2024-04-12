@@ -28,242 +28,297 @@ class AlistStrm(_PluginBase):
     plugin_order = 26
     auth_level = 1
 
-    _root_path = None
-    _site_url = None
-    _target_directory = None
-    _username = None
-    _password = None
-    _api_base_url = None
-    _user_agent = None
-    _login_path = None
-    _url_login = None
-    _traversed_paths = []
-    _token = None
+    _enabled = False
+    _cron = None
+    _monitor_confs = None
+    _onlyonce = False
+    _download_subtitle = False
 
-    def __init__(self, config_data: dict):
-        self._root_path = config_data.get('root_path', "/path/to/root")
-        self._site_url = config_data.get('site_url', 'www.tefuir0829.cn')
-        self._target_directory = config_data.get('target_directory', 'E:\\cloud\\')
-        self._username = config_data.get('username', 'admin')
-        self._password = config_data.get('password', 'password')
-        self._api_base_url = self._site_url + "/api"
-        self._user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"
-        self._login_path = "/auth/login"
-        self._url_login = self._api_base_url + self._login_path
-        self._token = self.get_token()
+    _liststrm_confs = None
 
-    def get_token(self):
-        payload_login = json.dumps({
-            "username": self._username,
-            "password": self._password
+    _try_max = 15
+
+    _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
+    _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')
+
+    # 定时器
+    _scheduler: Optional[BackgroundScheduler] = None
+
+    def init_plugin(self, config: dict = None):
+  
+        if config:
+            self._enabled = config.get("enabled")
+            self._cron = config.get("cron")
+            self._onlyonce = config.get("onlyonce")
+            self._download_subtitle = config.get("download_subtitle")
+            self._liststrm_confs = config.get("liststrm_confs").split("\n")
+
+        # 停止现有任务
+        self.stop_service()
+
+        if self._enabled or self._onlyonce:
+            # 定时服务
+            self._scheduler = BackgroundScheduler(timezone=settings.TZ)
+
+            # 运行一次定时服务
+            if self._onlyonce:
+                logger.info("AutoFilm执行服务启动，立即运行一次")
+                self._scheduler.add_job(func=self.scan, trigger='date',
+                                        run_date=datetime.now(tz=pytz.timezone(settings.TZ)) + timedelta(seconds=3),
+                                        name="AutoFilm单次执行")
+                # 关闭一次性开关
+                self._onlyonce = False
+
+            # 周期运行
+            if self._cron:
+                try:
+                    self._scheduler.add_job(func=self.scan,
+                                            trigger=CronTrigger.from_crontab(self._cron),
+                                            name="云盘监控生成")
+                except Exception as err:
+                    logger.error(f"定时任务配置错误：{err}")
+                    # 推送实时消息
+                    self.systemmessage.put(f"执行周期配置错误：{err}")
+
+            # 启动任务
+            if self._scheduler.get_jobs():
+                self._scheduler.print_jobs()
+                self._scheduler.start()
+
+    @eventmanager.register(EventType.PluginAction)
+    def scan(self, event: Event = None):
+        """
+        扫描
+        """
+        if not self._enabled:
+            logger.error("aliststrm插件未开启")
+            return
+        if not self._aliststrm_confs:
+            logger.error("未获取到可用目录监控配置，请检查")
+            return
+
+        if event:
+            event_data = event.event_data
+            if not event_data or event_data.get("action") != "alist_strm":
+                return
+            logger.info("aliststrm收到命令，开始生成Alist云盘Strm文件 ...")
+            self.post_message(channel=event.event_data.get("channel"),
+                              title="aliststrm开始生成strm ...",
+                              userid=event.event_data.get("user"))
+
+        logger.info("AutoFilm生成Strm任务开始")
+        
+        # 生成strm文件
+        for autofilm_conf in self._alistsyrm_confs:
+            # 格式 Webdav服务器地址:账号:密码:本地目录
+            if not autofilm_conf:
+                continue
+            if str(autofilm_conf).count("#") == 4:
+                alist_url = str(aliststrm_conf).split("#")[0]
+                alist_user = str(aliststrm_conf).split("#")[1]
+                alist_password = str(aliststrm_conf).split("#")[2]
+                local_path = str(aliststrm_conf).split("#")[3]
+                root_path = str(aliststrm_conf).split("#")[4]
+            else:
+                logger.error(f"{aliststrm_conf} 格式错误")
+                continue
+
+            # 生成strm文件
+            self.__generate_strm(alist_url, alist_user, alist_password, local_path, root_path)
+
+        logger.info("云盘strm生成任务完成")
+        if event:
+            self.post_message(channel=event.event_data.get("channel"),
+                              title="云盘strm生成任务完成！",
+                              userid=event.event_data.get("user"))
+    def __generate_strm(self, webdav_url:str, webdav_account:str, webdav_password:str, local_path:str):
+        """
+        生成Strm文件
+        """
+
+      def __update_config(self):
+        """
+        更新配置
+        """
+        self.update_config({
+            "enabled": self._enabled,
+            "onlyonce": self._onlyonce,
+            "rebuild": self._rebuild,
+            "copy_files": self._copy_files,
+            "cron": self._cron,
+            "monitor_confs": self._monitor_confs
         })
-        headers_login = {
-            'User-Agent': self._user_agent,
-            'Content-Type': 'application/json'
-        }
-        response_login = requests.post(self._url_login, headers=headers_login, data=payload_login)
-        return json.loads(response_login.text)['data']['token']
 
-    def list_directory(self, path):
-        url_list = self._api_base_url + "/fs/list"
-        payload_list = json.dumps({
-            "path": path,
-            "password": "",
-            "page": 1,
-            "per_page": 0,
-            "refresh": False
-        })
-        headers_list = {
-            'Authorization': self._token,
-            'User-Agent': self._user_agent,
-            'Content-Type': 'application/json'
-        }
-        try:
-            response_list = self.requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
-            return json.loads(response_list.text)
+    def get_state(self) -> bool:
+        return self._enabled
 
-        except Exception as x:
-            logger.error(f"遇到错误: {x.__class__.__name__}")
-            logger.info("正在重试...")
-            sleep(5)
-        response_list = requests.post(url_list, headers=headers_list, data=payload_list)
-        return json.loads(response_list.text)
+    @staticmethod
+    def get_command() -> List[Dict[str, Any]]:
+        """
+        定义远程控制命令
+        :return: 命令关键字、事件、描述、附带数据
+        """
+        return [{
+            "cmd": "/alist_strm",
+            "event": EventType.PluginAction,
+            "desc": "Alist云盘Strm文件生成",
+            "category": "",
+            "data": {
+                "action": "alist_strm"
+            }
+        }]
 
-    def traverse_directory(self, path, json_structure):
-        logger.info(f"正在遍历文件夹: {path}")
-        directory_info = self.list_directory(path)
-        if directory_info.get('data') and directory_info['data'].get('content'):
-            for item in directory_info['data']['content']:
-                if item['is_dir']:
-                    new_path = os.path.join(path, item['name'])
-                    sleep(1)
-                    if new_path in self._traversed_paths:
-                        continue
-                    self._traversed_paths.append(new_path)
-                    new_json_object = {}
-                    json_structure[item['name']] = new_json_object
-                    self.traverse_directory(new_path, new_json_object)
-                elif self.is_video_file(item['name']):
-                    json_structure[item['name']] = {
-                        'type': 'file',
-                        'size': item['size'],
-                        'modified': item['modified']
-                    }
+    def get_service(self) -> List[Dict[str, Any]]:
+        """
+        注册插件公共服务
+        [{
+            "id": "服务ID",
+            "name": "服务名称",
+            "trigger": "触发器：cron/interval/date/CronTrigger.from_crontab()",
+            "func": self.xxx,
+            "kwargs": {} # 定时器参数
+        }]
+        """
+        if self._enabled and self._cron:
+            return [{
+                "id": "AlistStrm",
+                "name": "Alist云盘strm文件生成服务",
+                "trigger": CronTrigger.from_crontab(self._cron),
+                "func": self.scan,
+                "kwargs": {}
+            }]
+        return []
 
-    def is_video_file(self, filename):
-        video_extensions = ['.mp4', '.mkv', '.avi', '.mov', '.flv', '.wmv']
-        return any(filename.lower().endswith(ext) for ext in video_extensions)
-
-    def create_strm_files(self, json_structure, target_directory, base_url, current_path=''):
-        for name, item in json_structure.items():
-            if isinstance(item, dict) and item.get('type') == 'file' and self.is_video_file(name):
-                strm_filename = name.rsplit('.', 1)[0] + '.strm'
-                strm_path = os.path.join(target_directory, current_path, strm_filename)
-                encoded_file_path = urllib.parse.quote(os.path.join(current_path.replace('\\', '/'), name))
-                video_url = base_url + encoded_file_path
-                with open(strm_path, 'w', encoding='utf-8') as strm_file:
-                    strm_file.write(video_url)
-            elif isinstance(item, dict):
-                new_directory = os.path.join(target_directory, current_path, name)
-                os.makedirs(new_directory, exist_ok=True)
-                self.create_strm_files(item, target_directory, base_url, os.path.join(current_path, name))
-
-    def requests_retry_session(self, retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None):
-        session = session or requests.Session()
-        retry = Retry(
-            total=retries,
-            read=retries,
-            connect=retries,
-            backoff_factor=backoff_factor,
-            status_forcelist=status_forcelist,
-        )
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
-        return session
-
-    def run(self):
-        logger.info('脚本运行中...')
-        json_structure = {}
-        self.traverse_directory(self._root_path, json_structure)
-        os.makedirs(self._target_directory, exist_ok=True)
-        base_url = self._site_url + '/d' + self._root_path + '/'
-        sleep(10)
-        logger.info('所有strm文件创建完成')
-        self.create_strm_files(json_structure, self._target_directory, base_url)
-        with open('directory_structure.json', 'w') as f:
-            json.dump(json_structure, f, indent=4)
+    def get_api(self) -> List[Dict[str, Any]]:
+        pass
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
         """
         拼装插件配置页面，需要返回两块数据：1、页面配置；2、数据结构
         """
         return [
-        {
-            'component': 'VForm',
-            'content': [
-                {
-                    'component': 'VRow',
-                    'content': [
-                        {
-                            'component': 'VCol',
-                            'props': {
-                                'cols': 12,
-                                'md': 6
-                            },
-                            'content': [
-                                {
-                                    'component': 'VSwitch',
-                                    'props': {
-                                        'model': 'enabled',
-                                        'label': '启用插件',
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            'component': 'VCol',
-                            'props': {
-                                'cols': 12,
-                                'md': 6
-                            },
-                            'content': [
-                                {
-                                    'component': 'VSwitch',
-                                    'props': {
-                                        'model': 'onlyonce',
-                                        'label': '立即运行一次',
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    'component': 'VTextField',
-                    'props': {
-                        'model': 'root_path',
-                        'label': 'Alist 根目录路径',
-                    }
-                },
-                {
-                    'component': 'VTextField',
-                    'props': {
-                        'model': 'site_url',
-                        'label': 'Alist 网站地址',
-                    }
-                },
-                {
-                    'component': 'VTextField',
-                    'props': {
-                        'model': 'target_directory',
-                        'label': 'Strm 文件输出目录',
-                    }
-                },
-                {
-                    'component': 'VTextField',
-                    'props': {
-                        'model': 'username',
-                        'label': 'Alist 用户名',
-                    }
-                },
-                {
-                    'component': 'VTextField',
-                    'props': {
-                        'model': 'password',
-                        'label': 'Alist 密码',
-                        'type': 'password'
-                    }
-                },
-            ]
-        }
-    ], {
-        "enabled": False,
-        "onlyonce": False,
-        "root_path": "/path/to/root",
-        "site_url": "www.tefuir0829.cn",
-        "target_directory": "E:\\cloud\\",
-        "username": "admin",
-        "password": "password"
-    }
-
-
-
-    def get_command(self) -> List[Dict[str, Any]]:
-        return [
             {
-                "cmd": "/generate_strm",
-                "event": EventType.PluginAction,
-                "desc": "生成 Alist 云盘 Strm 文件",
-                "category": "",
-                "data": {
-                    "action": "generate_strm"
-                }
+                'component': 'VForm',
+                'content': [
+                    {
+                        'component': 'VRow',
+                        'content': [
+                            {
+                                'component': 'VCol',
+                                'props': {
+                                    'cols': 12,
+                                    'md': 4
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VSwitch',
+                                        'props': {
+                                            'model': 'enabled',
+                                            'label': '启用插件',
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                'component': 'VCol',
+                                'props': {
+                                    'cols': 12,
+                                    'md': 4
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VSwitch',
+                                        'props': {
+                                            'model': 'onlyonce',
+                                            'label': '立即运行一次',
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                'component': 'VCol',
+                                'props': {
+                                    'cols': 12,
+                                    'md': 4
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VSwitch',
+                                        'props': {
+                                            'model': 'download_subtitle',
+                                            'label': '下载字幕',
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'component': 'VRow',
+                        'content': [
+                            {
+                                'component': 'VCol',
+                                'props': {
+                                    'cols': 12,
+                                    'md': 6
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VTextField',
+                                        'props': {
+                                            'model': 'cron',
+                                            'label': '生成周期',
+                                            'placeholder': '0 0 * * *'
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'component': 'VRow',
+                        'content': [
+                            {
+                                'component': 'VCol',
+                                'props': {
+                                    'cols': 12
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VTextarea',
+                                        'props': {
+                                            'model': 'aliststrm_confs',
+                                            'label': 'aliststrm配置文件',
+                                            'rows': 5,
+                                            'placeholder': 'alist服务器地址#账号#密码#本地目录#alist开始目录'
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
             }
-        ]
+        ], {
+            "enabled": False,
+            "cron": "",
+            "onlyonce": False,
+            "download_subttile": False,
+            "aliststrm_confs": ""
+        }
 
-    @eventmanager.register(EventType.PluginAction)
-    def handle_generate_strm_event(self, event: Event = None):
-        if event and event.event_data.get("action") == "generate_strm":
-            self.run()
+    def get_page(self) -> List[dict]:
+        pass
 
+    def stop_service(self):
+        """
+        退出插件
+        """
+        try:
+            if self._scheduler:
+                self._scheduler.remove_all_jobs()
+                if self._scheduler.running:
+                    self._scheduler.shutdown()
+                self._scheduler = None
+        except Exception as e:
+            logger.error(f"退出插件失败：{str(e)}")
