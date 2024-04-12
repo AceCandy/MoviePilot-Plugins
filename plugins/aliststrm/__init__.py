@@ -155,55 +155,95 @@ class AlistStrm(_PluginBase):
             json.dump(json_structure, f, indent=4)
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
-        return [
-            {
-                'component': 'VForm',
-                'content': [
-                    {
-                        'component': 'VTextField',
-                        'props': {
-                            'model': 'root_path',
-                            'label': 'Alist 根目录路径',
+    return [
+        {
+            'component': 'VForm',
+            'content': [
+                {
+                    'component': 'VRow',
+                    'content': [
+                        {
+                            'component': 'VCol',
+                            'props': {
+                                'cols': 12,
+                                'md': 6
+                            },
+                            'content': [
+                                {
+                                    'component': 'VSwitch',
+                                    'props': {
+                                        'model': 'enabled',
+                                        'label': '启用插件',
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            'component': 'VCol',
+                            'props': {
+                                'cols': 12,
+                                'md': 6
+                            },
+                            'content': [
+                                {
+                                    'component': 'VSwitch',
+                                    'props': {
+                                        'model': 'onlyonce',
+                                        'label': '立即运行一次',
+                                    }
+                                }
+                            ]
                         }
-                    },
-                    {
-                        'component': 'VTextField',
-                        'props': {
-                            'model': 'site_url',
-                            'label': 'Alist 网站地址',
-                        }
-                    },
-                    {
-                        'component': 'VTextField',
-                        'props': {
-                            'model': 'target_directory',
-                            'label': 'Strm 文件输出目录',
-                        }
-                    },
-                    {
-                        'component': 'VTextField',
-                        'props': {
-                            'model': 'username',
-                            'label': 'Alist 用户名',
-                        }
-                    },
-                    {
-                        'component': 'VTextField',
-                        'props': {
-                            'model': 'password',
-                            'label': 'Alist 密码',
-                            'type': 'password'
-                        }
-                    },
-                ]
-            }
-        ], {
-            "root_path": "/path/to/root",
-            "site_url": "www.tefuir0829.cn",
-            "target_directory": "E:\\cloud\\",
-            "username": "admin",
-            "password": "password"
+                    ]
+                },
+                {
+                    'component': 'VTextField',
+                    'props': {
+                        'model': 'root_path',
+                        'label': 'Alist 根目录路径',
+                    }
+                },
+                {
+                    'component': 'VTextField',
+                    'props': {
+                        'model': 'site_url',
+                        'label': 'Alist 网站地址',
+                    }
+                },
+                {
+                    'component': 'VTextField',
+                    'props': {
+                        'model': 'target_directory',
+                        'label': 'Strm 文件输出目录',
+                    }
+                },
+                {
+                    'component': 'VTextField',
+                    'props': {
+                        'model': 'username',
+                        'label': 'Alist 用户名',
+                    }
+                },
+                {
+                    'component': 'VTextField',
+                    'props': {
+                        'model': 'password',
+                        'label': 'Alist 密码',
+                        'type': 'password'
+                    }
+                },
+            ]
         }
+    ], {
+        "enabled": False,
+        "onlyonce": False,
+        "root_path": "/path/to/root",
+        "site_url": "www.tefuir0829.cn",
+        "target_directory": "E:\\cloud\\",
+        "username": "admin",
+        "password": "password"
+    }
+
 
     def get_command(self) -> List[Dict[str, Any]]:
         return [
