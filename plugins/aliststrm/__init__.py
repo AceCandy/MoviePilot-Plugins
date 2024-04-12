@@ -125,7 +125,7 @@ class AlistStrm(_PluginBase):
             token = self.__get_token(alist_url, alist_user, alist_password)
 
             # 生成strm文件
-            self.__generate_strm(alist_url, token, local_path, root_path)
+            self.__generate_strm(alist_url, token, alist_password, local_path, root_path)
 
         logger.info("云盘strm生成任务完成")
         if event:
@@ -153,7 +153,7 @@ class AlistStrm(_PluginBase):
         token = json.loads(response_login.text)['data']['token']
         return token
 
-    def __generate_strm(self, webdav_url:str, token:str, local_path:str, root_path:str):
+    def __generate_strm(self, webdav_url:str, token:str, alist_password:str, local_path:str, root_path:str):
         for path in self.__traverse_directory(local_path):
             self.__create_strm_files(path, root_path, webdav_url)
 
@@ -184,10 +184,12 @@ class AlistStrm(_PluginBase):
                     }
 
     def __list_directory(self, path):
+        api_base_url = self.api_base_url  # Add this line
+        UserAgent = self.UserAgent  # Add this line
         url_list = api_base_url + "/fs/list"
         payload_list = json.dumps({
             "path": path,
-            "password": alist_password,
+            "password": alist_password,  # Change to alist_password
             "page": 1,
             "per_page": 0,
             "refresh": False
