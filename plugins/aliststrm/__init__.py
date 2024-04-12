@@ -207,7 +207,7 @@ class AlistStrm(_PluginBase):
             return json.loads(response_list.text)
 
     def __create_strm_files(self, local_path, target_directory, base_url, alist_url, root_path):
-    for name, item in local_path.items():
+        for name, item in local_path.items():
         video_base_url = alist_url + '/d' + root_path + '/'  # 修改为video_base_url，避免与参数base_url混淆
         if isinstance(item, dict) and item.get('type') == 'file' and self.__is_video_file(name):
             strm_filename = name.rsplit('.', 1)[0] + '.strm'
