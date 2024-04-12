@@ -155,7 +155,7 @@ class AlistStrm(_PluginBase):
 
     def __generate_strm(self, alist_url:str, token:str, alist_password:str, local_path:str, root_path:str):
         for path in self.__traverse_directory(local_path):
-            self.__create_strm_files(path, root_path, webdav_url)
+            self.__create_strm_files(path, root_path, alist_url)  # Fixed typo here
 
     def __traverse_directory(self, path):
         traversed_paths = []
