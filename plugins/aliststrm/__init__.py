@@ -42,11 +42,6 @@ class AlistStrm(_PluginBase):
     
     _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
     _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')
-    _api_base_url = alist_url + "/api"
-    _UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"
-    _login_path = "/auth/login"
-    _url_login = api_base_url + login_path
-    _traversed_paths = []
 
     # 定时器
     _scheduler: Optional[BackgroundScheduler] = None
@@ -189,7 +184,9 @@ class AlistStrm(_PluginBase):
                     }
 
     def __list_directory(self, path):
-        url_list = _api_base_url + "/fs/list"
+    api_base_url = self.api_base_url  # Correct
+    UserAgent = self.UserAgent  # Correct
+    url_list = api_base_url + "/fs/list"
         payload_list = json.dumps({
             "path": path,
             "password": alist_password,  # Change to alist_password
