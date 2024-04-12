@@ -39,9 +39,14 @@ class AlistStrm(_PluginBase):
     _liststrm_confs = None
 
     _try_max = 15
-
+    
     _video_formats = ('.mp4', '.avi', '.rmvb', '.wmv', '.mov', '.mkv', '.flv', '.ts', '.webm', '.iso', '.mpg', '.m2ts')
     _subtitle_formats = ('.ass', '.srt', '.ssa', '.sub')
+    _api_base_url = site_url + "/api"
+    _UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"
+    _login_path = "/auth/login"
+    _url_login = api_base_url + login_path
+    _traversed_paths = []
 
     # 定时器
     _scheduler: Optional[BackgroundScheduler] = None
@@ -153,7 +158,7 @@ class AlistStrm(_PluginBase):
         token = json.loads(response_login.text)['data']['token']
         return token
 
-    def __generate_strm(self, webdav_url:str, token:str, alist_password:str, local_path:str, root_path:str):
+    def __generate_strm(self, alist_url:str, token:str, alist_password:str, local_path:str, root_path:str):
         for path in self.__traverse_directory(local_path):
             self.__create_strm_files(path, root_path, webdav_url)
 
@@ -184,9 +189,7 @@ class AlistStrm(_PluginBase):
                     }
 
     def __list_directory(self, path):
-        api_base_url = self.api_base_url  # Add this line
-        UserAgent = self.UserAgent  # Add this line
-        url_list = api_base_url + "/fs/list"
+        url_list = _api_base_url + "/fs/list"
         payload_list = json.dumps({
             "path": path,
             "password": alist_password,  # Change to alist_password
@@ -196,7 +199,7 @@ class AlistStrm(_PluginBase):
         })
         headers_list = {
             'Authorization': token,
-            'User-Agent': UserAgent,
+            'User-Agent': _UserAgent,
             'Content-Type': 'application/json'
         }
         try:
