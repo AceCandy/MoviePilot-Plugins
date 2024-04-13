@@ -137,7 +137,7 @@ class AlistStrm(_PluginBase):
 
         # 遍历目录生成strm文件
         traversed_paths = self.__traverse_directory(local_path, alist_url, token)
-        self._create_strm_files(traversed_paths, root_path, alist_url, token)
+        self._create_strm_files(traversed_paths, local_path, alist_url, token)
 
     def __get_token(self, url: str, password: str, user: str) -> str:
         api_base_url = url + "/api"
@@ -215,7 +215,7 @@ class AlistStrm(_PluginBase):
             self.__traverse_directory_recursively(path, json_structure, [], alist_url, token)
             self.__create_strm_files(json_structure, path, base_url, alist_url, root_path)
 
-    def __create_strm_files(self, json_structure, current_path, base_url, alist_url, root_path):
+    def __create_strm_files(self, json_structure, current_path='', base_url, alist_url, root_path):
         target_directory = os.path.join(os.getcwd(), 'strms')
         for name, item in json_structure.items():
             if isinstance(item, dict) and item.get('type') == 'file' and name.endswith(self._video_formats):
