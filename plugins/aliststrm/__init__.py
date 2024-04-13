@@ -108,7 +108,7 @@ class AlistStrm(_PluginBase):
         
         # 生成strm文件
         for liststrm_conf in self._liststrm_confs:
-            # 格式 Webdav服务器地址:账号:密码:本地目录
+            # 格式 Webdav服务器地址:账号:密码:本地目录:Webdav开始目录
             if not liststrm_conf:
                 continue
             if str(liststrm_conf).count("#") == 4:
@@ -136,7 +136,7 @@ class AlistStrm(_PluginBase):
 
         # 遍历目录生成strm文件
         traversed_paths = self.__traverse_directory(local_path, alist_url, token)
-        self.__create_strm_files(traversed_paths, root_path, alist_url, token)
+        self._create_strm_files(traversed_paths, root_path, alist_url, token)
 
     def __get_token(self, url: str, password: str) -> str:
         api_base_url = url + "/api"
@@ -207,14 +207,15 @@ class AlistStrm(_PluginBase):
             response_list = self._requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
             return json.loads(response_list.text)
 
-    def __create_strm_files(self, traversed_paths, root_path, alist_url, token):
+    def _create_strm_files(self, traversed_paths, root_path, alist_url, token):
         base_url = alist_url + '/d' + root_path + '/'
         for path in traversed_paths:
             json_structure = {}
             self.__traverse_directory_recursively(path, json_structure, [], alist_url, token)
-            self.__create_strm_files(json_structure, self.target_directory, base_url, path, alist_url, root_path)
+            self.__create_strm_files(json_structure, path, base_url, alist_url, root_path)
 
-    def __create_strm_files(self, json_structure, target_directory, base_url, current_path='', alist_url='', root_path=''):
+    def __create_strm_files(self, json_structure, current_path, base_url, alist_url, root_path):
+        target_directory = os.path.join(os.getcwd(), 'strms')
         for name, item in json_structure.items():
             if isinstance(item, dict) and item.get('type') == 'file' and name.endswith(self._video_formats):
                 strm_filename = name.rsplit('.', 1)[0] + '.strm'
@@ -231,7 +232,7 @@ class AlistStrm(_PluginBase):
             elif isinstance(item, dict):  # 如果是一个目录，递归处理
                 new_directory = os.path.join(target_directory, current_path, name)
                 os.makedirs(new_directory, exist_ok=True)
-                self.__create_strm_files(item, target_directory, base_url, os.path.join(current_path, name), alist_url, root_path)
+                self.__create_strm_files(item, os.path.join(current_path, name), base_url, alist_url, root_path)
 
     def _requests_retry_session(self, retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None):
         session = session or requests.Session()
@@ -410,4 +411,3 @@ class AlistStrm(_PluginBase):
                 self._scheduler = None
         except Exception as e:
             logger.error(f"Exiting plugin failed: {str(e)}")
-
