@@ -185,14 +185,14 @@ class AlistStrm(_PluginBase):
     def _list_directory(self, root_path, alist_url, token):
         url_list = alist_url + "/api/fs/list"
         payload_list = json.dumps({
-            "path": root_path,
+            "path": "root_path",
             "password": "",  
             "page": 1,
             "per_page": 0,
             "refresh": False
         })
         headers_list = {
-            'Authorization': token,
+            'Authorization': 'token',
             'User-Agent': self.UserAgent,
             'Content-Type': 'application/json'
         }
