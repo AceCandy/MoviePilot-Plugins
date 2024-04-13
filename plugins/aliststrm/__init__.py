@@ -206,26 +206,24 @@ class AlistStrm(_PluginBase):
             response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
             return json.loads(response_list.text)
 
-    def __create_strm_files(self, local_path, target_directory, alist_url, root_path):
-        for name, item in local_path.items():
+def create_strm_files(json_structure, target_directory, base_url, current_path='', alist_url='', root_path=''):
+    for name, item in json_structure.items():
+        if isinstance(item, dict) and item.get('type') == 'file' and is_video_file(name):
+            strm_filename = name.rsplit('.', 1)[0] + '.strm'
+            strm_path = os.path.join(target_directory, current_path, strm_filename)
             base_url = alist_url + '/d' + root_path + '/'
-            if isinstance(item, dict) and item.get('type') == 'file' and self._video_formats:
-                strm_filename = name.rsplit('.', 1)[0] + '.strm'
-                strm_path = os.path.join(target_directory, strm_filename)
+            # 对整个文件路径进行URL编码
+            encoded_file_path = urllib.parse.quote(os.path.join(current_path.replace('\\', '/'), name))
 
-                # Encode the entire file path
-                encoded_file_path = urllib.parse.quote(os.path.join(current_path.replace('\\', '/'), name))
+            # 拼接完整的视频URL
+            video_url = base_url + encoded_file_path
 
-                # Concatenate the complete video URL
-                video_url = base_url + encoded_file_path
-
-                with open(strm_path, 'w', encoding='utf-8') as strm_file:
-                    strm_file.write(video_url)
-            elif isinstance(item, dict):  # If it's a directory, recursively process it
-                new_directory = os.path.join(target_directory, name)
-                os.makedirs(new_directory, exist_ok=True)
-
-    
+            with open(strm_path, 'w', encoding='utf-8') as strm_file:
+                strm_file.write(video_url)
+        elif isinstance(item, dict):  # 如果是一个目录，递归处理
+            new_directory = os.path.join(target_directory, current_path, name)
+            os.makedirs(new_directory, exist_ok=True)
+            create_strm_files(item, target_directory, base_url, os.path.join(current_path, name), alist_url, root_path)
 
     def __requests_retry_session(self, retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None):
         session = session or requests.Session()
