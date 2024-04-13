@@ -133,7 +133,6 @@ class AlistStrm(_PluginBase):
     def generate_strm(self, alist_url: str, alist_password: str, local_path: str, root_path: str, alist_user: str):
         # 获取token
         token = self.__get_token(alist_url, alist_password, alist_user)
-        self._list_directory(root_path, alist_url, token)
 
         # 遍历目录生成strm文件
         traversed_paths = self.__traverse_directory(local_path, alist_url, token)
@@ -183,10 +182,10 @@ class AlistStrm(_PluginBase):
                         'modified': item['modified']
                     }
 
-    def _list_directory(self, path, alist_url, token):
+    def _list_directory(self, root_path, alist_url, token):
         url_list = alist_url + "/api/fs/list"
         payload_list = json.dumps({
-            "path": path,
+            "path": root_path,
             "password": "",  
             "page": 1,
             "per_page": 0,
