@@ -121,9 +121,6 @@ class AlistStrm(_PluginBase):
                 logger.error(f"{liststrm_conf} 格式错误")
                 continue
 
-            # 获取 token
-            token = self.__get_token(alist_url, alist_user, alist_password)
-
             # 生成strm文件
             self.__generate_strm(alist_url, token, alist_password, local_path, root_path)
 
@@ -133,85 +130,96 @@ class AlistStrm(_PluginBase):
                               title="云盘strm生成任务完成！",
                               userid=event.event_data.get("user"))
                               
-    def __get_token(self, url: str, username: str, password: str) -> str:
-        api_base_url = url + "/api"
-        login_path = "/auth/login"
-        url_login = api_base_url + login_path
-        payload_login = json.dumps({
-            "username": username,
-            "password": password
-        })
+def generate_strm(self, alist_url: str, alist_password: str, local_path: str, root_path: str):
+    # 获取token
+    token = self.__get_token(alist_url, alist_password)
 
-        headers_login = {
-            'User-Agent': self.UserAgent,
-            'Content-Type': 'application/json'
-        }
+    # 遍历目录生成strm文件
+    traversed_paths = self.__traverse_directory(local_path, alist_url, token)
+    self.__create_strm_files(traversed_paths, root_path, alist_url, token)
 
-        response_login = requests.post(url_login, headers=headers_login, data=payload_login)
-        token = json.loads(response_login.text)['data']['token']
-        return token
+def __get_token(self, url: str, password: str) -> str:
+    api_base_url = url + "/api"
+    login_path = "/auth/login"
+    url_login = api_base_url + login_path
+    payload_login = json.dumps({
+        "username": self.username,  # Assume username is a class variable
+        "password": password
+    })
 
-    def __generate_strm(self, alist_url:str, token:str, alist_password:str, local_path:str, root_path:str):
-        for path in self.__traverse_directory(local_path, alist_url, token):  # 将alist_url和token传递给__traverse_directory方法
-            self.__create_strm_files(path, root_path, alist_url)  
+    headers_login = {
+        'User-Agent': self.UserAgent,
+        'Content-Type': 'application/json'
+    }
 
-    def __traverse_directory(self, path, alist_url, token):  # 添加alist_url和token参数
-        traversed_paths = []
+    response_login = requests.post(url_login, headers=headers_login, data=payload_login)
+    token = json.loads(response_login.text)['data']['token']
+    return token
+
+def __traverse_directory(self, path, alist_url, token):
+    traversed_paths = []
+    json_structure = {}
+    self.__traverse_directory_recursively(path, json_structure, traversed_paths, alist_url, token)
+    return traversed_paths
+
+def __traverse_directory_recursively(self, path, json_structure, traversed_paths, alist_url, token):
+    directory_info = self.__list_directory(path, alist_url, token)
+    if directory_info.get('data') and directory_info['data'].get('content'):
+        for item in directory_info['data']['content']:
+            if item['is_dir']:
+                new_path = os.path.join(path, item['name'])
+                sleep(1)
+                if new_path in traversed_paths:
+                    continue
+                traversed_paths.append(new_path)
+                new_json_object = {}
+                json_structure[item['name']] = new_json_object
+                self.__traverse_directory_recursively(new_path, new_json_object, traversed_paths, alist_url, token)
+            elif self._video_formats(item['name']):
+                json_structure[item['name']] = {
+                    'type': 'file',
+                    'size': item['size'],
+                    'modified': item['modified']
+                }
+
+def __list_directory(self, path, alist_url, token):
+    url_list = alist_url + "/api/fs/list"
+    payload_list = json.dumps({
+        "path": path,
+        "password": "",  
+        "page": 1,
+        "per_page": 0,
+        "refresh": False
+    })
+    headers_list = {
+        'Authorization': token,
+        'User-Agent': self.UserAgent,
+        'Content-Type': 'application/json'
+    }
+    try:
+        response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
+        return json.loads(response_list.text)
+
+    except Exception as x:
+        print(f"Error encountered: {x.__class__.__name__}")
+        print("Retrying...")
+        sleep(5)
+        response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
+        return json.loads(response_list.text)
+
+def __create_strm_files(self, traversed_paths, root_path, alist_url, token):
+    base_url = alist_url + '/d' + root_path + '/'
+    for path in traversed_paths:
         json_structure = {}
-        self.__traverse_directory_recursively(path, json_structure, traversed_paths, alist_url, token)  # 将alist_url和token传递给__traverse_directory_recursively方法
-        return traversed_paths
+        self.__traverse_directory_recursively(path, json_structure, [], alist_url, token)
+        self.create_strm_files(json_structure, self.target_directory, base_url, path, alist_url, root_path)
 
-    def __traverse_directory_recursively(self, path, json_structure, traversed_paths, alist_url, token):  # 添加alist_url和token参数
-        directory_info = self.__list_directory(path, alist_url, token)  # 添加alist_url和token参数
-        if directory_info.get('data') and directory_info['data'].get('content'):
-            for item in directory_info['data']['content']:
-                if item['is_dir']:  # If it's a directory
-                    new_path = os.path.join(path, item['name'])
-                    sleep(1)
-                    if new_path in traversed_paths:
-                        continue
-                    traversed_paths.append(new_path)
-                    new_json_object = {}
-                    json_structure[item['name']] = new_json_object
-                    self.__traverse_directory_recursively(new_path, new_json_object, traversed_paths, alist_url, token)  # 添加alist_url和token参数，递归调用
-                elif self._video_formats(item['name']):  # If it's a video file
-                    json_structure[item['name']] = {
-                        'type': 'file',
-                        'size': item['size'],
-                        'modified': item['modified']
-                    }
-
-    def __list_directory(self, path, alist_url, token):  # 添加alist_url和token参数
-        url_list = alist_url + "/api/fs/list"
-        payload_list = json.dumps({
-            "path": path,
-            "password": "",  
-            "page": 1,
-            "per_page": 0,
-            "refresh": False
-        })
-        headers_list = {
-            'Authorization': token,
-            'User-Agent': self.UserAgent,
-            'Content-Type': 'application/json'
-        }
-        try:
-            response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
-            return json.loads(response_list.text)
-
-        except Exception as x:
-            print(f"Error encountered: {x.__class__.__name__}")
-            print("Retrying...")
-            sleep(5)
-            response_list = self.__requests_retry_session().post(url_list, headers=headers_list, data=payload_list)
-            return json.loads(response_list.text)
-
-def create_strm_files(json_structure, target_directory, base_url, current_path='', alist_url='', root_path=''):
+def create_strm_files(self, json_structure, target_directory, base_url, current_path='', alist_url='', root_path=''):
     for name, item in json_structure.items():
-        if isinstance(item, dict) and item.get('type') == 'file' and is_video_file(name):
+        if isinstance(item, dict) and item.get('type') == 'file' and self._video_formats(name):
             strm_filename = name.rsplit('.', 1)[0] + '.strm'
             strm_path = os.path.join(target_directory, current_path, strm_filename)
-            base_url = alist_url + '/d' + root_path + '/'
+
             # 对整个文件路径进行URL编码
             encoded_file_path = urllib.parse.quote(os.path.join(current_path.replace('\\', '/'), name))
 
@@ -223,21 +231,22 @@ def create_strm_files(json_structure, target_directory, base_url, current_path='
         elif isinstance(item, dict):  # 如果是一个目录，递归处理
             new_directory = os.path.join(target_directory, current_path, name)
             os.makedirs(new_directory, exist_ok=True)
-            create_strm_files(item, target_directory, base_url, os.path.join(current_path, name), alist_url, root_path)
+            self.create_strm_files(item, target_directory, base_url, os.path.join(current_path, name), alist_url, root_path)
 
-    def __requests_retry_session(self, retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None):
-        session = session or requests.Session()
-        retry = Retry(
-            total=retries,
-            read=retries,
-            connect=retries,
-            backoff_factor=backoff_factor,
-            status_forcelist=status_forcelist,
-        )
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
-        return session
+def __requests_retry_session(self, retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
+
 
     def __update_config(self):
         self.update_config({
