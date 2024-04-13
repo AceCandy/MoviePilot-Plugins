@@ -143,7 +143,7 @@ class AlistStrm(_PluginBase):
         login_path = "/auth/login"
         url_login = api_base_url + login_path
         payload_login = json.dumps({
-            "username": self.username,  # Assume username is a class variable
+            "username": self.alit_user,  # Assume username is a class variable
             "password": password
         })
 
