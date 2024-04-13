@@ -122,7 +122,7 @@ class AlistStrm(_PluginBase):
                 continue
 
             # 生成strm文件
-            self.generate_strm(alist_url, alist_password, local_path, root_path)
+            self.generate_strm(alist_url, alist_password, local_path, root_path, alist_user)
 
         logger.info("云盘strm生成任务完成")
         if event:
@@ -130,20 +130,20 @@ class AlistStrm(_PluginBase):
                               title="云盘strm生成任务完成！",
                               userid=event.event_data.get("user"))
 
-    def generate_strm(self, alist_url: str, alist_password: str, local_path: str, root_path: str):
+    def generate_strm(self, alist_url: str, alist_password: str, local_path: str, root_path: str, alist_user: str):
         # 获取token
-        token = self.__get_token(alist_url, alist_password)
+        token = self.__get_token(alist_url, alist_password, alist_user)
 
         # 遍历目录生成strm文件
         traversed_paths = self.__traverse_directory(local_path, alist_url, token)
         self._create_strm_files(traversed_paths, root_path, alist_url, token)
 
-    def __get_token(self, url: str, password: str) -> str:
+    def __get_token(self, url: str, password: str, user: str) -> str:
         api_base_url = url + "/api"
         login_path = "/auth/login"
         url_login = api_base_url + login_path
         payload_login = json.dumps({
-            "username": self.alit_user,  # Assume username is a class variable
+            "username": user,  # Assume username is a class variable
             "password": password
         })
 
