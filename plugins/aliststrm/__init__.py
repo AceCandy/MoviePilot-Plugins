@@ -174,7 +174,7 @@ class AlistStrm(_PluginBase):
                     new_json_object = {}
                     json_structure[item['name']] = new_json_object
                     self.__traverse_directory_recursively(new_path, new_json_object, traversed_paths, alist_url, token)  # 添加alist_url和token参数，递归调用
-                elif self.__is_video_file(item['name']):  # If it's a video file
+                elif self._video_formats(item['name']):  # If it's a video file
                     json_structure[item['name']] = {
                         'type': 'file',
                         'size': item['size'],
