@@ -198,7 +198,7 @@ class AutoFilm(_PluginBase):
                     
                 subtitile_file_path = os.path.join(local_path, file_url.replace(webdav_url, ''))
                 os.makedirs(os.path.dirname(subtitile_file_path), exist_ok=True) # 创建递归目录
-                with open(subtitile_file_path, "w") as f:
+                with open(subtitile_file_path, "wb") as f:
                     f.write(response.content)
         
     def __update_config(self):
