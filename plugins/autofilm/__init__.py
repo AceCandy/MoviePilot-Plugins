@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from webdav3.client import Client
 import time
 import requests
-import urllib
+import urllib.parse
 
 import pytz
 from typing import Any, List, Dict, Tuple, Optional
