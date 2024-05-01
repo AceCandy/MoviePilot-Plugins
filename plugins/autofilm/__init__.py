@@ -179,7 +179,7 @@ class AutoFilm(_PluginBase):
                 strm_file_path = os.path.join(local_path, file_url.replace(webdav_url, '').rsplit(".", 1)[0] + ".strm")
                 os.makedirs(os.path.dirname(strm_file_path), exist_ok=True) # 创建递归目录
                 with open(strm_file_path, "w") as f:
-                    url_string = file_url.replace("/dav", "/d")
+                    url_string = urllib.parse.unquote(file_url.replace("/dav", "/d"))
                     f.write(url_string)
             elif file_url.lower().endswith(tuple(self._subtitle_formats)):
                 try_number = 1
