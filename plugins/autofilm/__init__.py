@@ -3,16 +3,19 @@ from datetime import datetime, timedelta
 from webdav3.client import Client
 import time
 import requests
+
 import pytz
-import threading
 from typing import Any, List, Dict, Tuple, Optional
+
 from app.core.event import eventmanager, Event
 from app.schemas.types import EventType
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+
 from app.log import logger
 from app.plugins import _PluginBase
 from app.core.config import settings
+
 
 class AutoFilm(_PluginBase):
     # 插件名称
@@ -22,7 +25,7 @@ class AutoFilm(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "0.6"
+    plugin_version = "0.5"
     # 插件作者
     plugin_author = "Akimio521"
     # 作者主页
@@ -115,16 +118,22 @@ class AutoFilm(_PluginBase):
 
         logger.info("AutoFilm生成Strm任务开始")
         
-        threads = []
+        # 生成strm文件
         for autofilm_conf in self._autofilm_confs:
+            # 格式 Webdav服务器地址:账号:密码:本地目录
             if not autofilm_conf:
                 continue
-            thread = threading.Thread(target=self.__generate_strm, args=(autofilm_conf,))
-            threads.append(thread)
-            thread.start()
+            if str(autofilm_conf).count("#") == 3:
+                webdav_url = str(autofilm_conf).split("#")[0]
+                webdav_account = str(autofilm_conf).split("#")[1]
+                webdav_password = str(autofilm_conf).split("#")[2]
+                local_path = str(autofilm_conf).split("#")[3]
+            else:
+                logger.error(f"{autofilm_conf} 格式错误")
+                continue
 
-        for thread in threads:
-            thread.join()
+            # 生成strm文件
+            self.__generate_strm(webdav_url, webdav_account, webdav_password, local_path)
 
         logger.info("云盘strm生成任务完成")
         if event:
@@ -132,63 +141,65 @@ class AutoFilm(_PluginBase):
                               title="云盘strm生成任务完成！",
                               userid=event.event_data.get("user"))
 
-    def __generate_strm(self, autofilm_conf):
-        """
-        生成Strm文件
-        """
-        webdav_url, webdav_account, webdav_password, local_path = autofilm_conf.split("#")
-        dir_url_list = [webdav_url]
-        files_list = []
+    def __generate_strm(self, webdav_url:str, webdav_account:str, webdav_password:str, local_path:str):
+    """
+    生成Strm文件
+    """
+    dir_url_list = []
+    files_list = []
+    dir_url_list.append(webdav_url)
 
-        while dir_url_list:
-            url = dir_url_list.pop(0)
-            client = Client(options={"webdav_hostname": url, "webdav_login": webdav_account, "webdav_password": webdav_password})
+    # 获取目录下所有文件
+    while dir_url_list:
+        url = dir_url_list.pop(0)
+        # 连接该Webdav服务器
+        client = Client(options={"webdav_hostname": url,"webdav_login": webdav_account,"webdav_password": webdav_password})
+        try_number = 1
+        while try_number <= self._try_max:
+            try:
+                items = client.list()
+            except Exception as e:
+                logger.warning(f"AutoFilm连接{url}遇到错误，第{try_number}尝试失败；错误信息：{str(e)}，传入URL：{url}")
+                time.sleep(try_number)
+                try_number += 1
+            else:
+                if try_number > 1:
+                    logger.info(f"{url}重连成功")
+                break
+        for item in items[1:]:
+            if item.endswith("/"):
+                dir_url_list.append(url + item)
+            else:
+                files_list.append(url + item)
+    
+    logger.info(f"AutoFilm获取到{len(files_list)}个文件，开始生成strm文件")
+
+    for file_url in files_list:
+        if file_url.lower().endswith(tuple(self._video_formats)):
+            strm_file_path = os.path.join(local_path, unquote(os.path.basename(file_url.rsplit(".", 1)[0])) + ".strm")
+            os.makedirs(os.path.dirname(strm_file_path), exist_ok=True) # 创建递归目录
+            with open(strm_file_path, "w") as f:
+                url_string = file_url.replace("/dav", "/d")
+                f.write(url_string)
+        elif file_url.lower().endswith(tuple(self._subtitle_formats)):
             try_number = 1
             while try_number <= self._try_max:
                 try:
-                    items = client.list()
+                    response = requests.get(file_url.replace("/dav", "/d"))
                 except Exception as e:
-                    logger.warning(f"AutoFilm连接{url}遇到错误，第{try_number}尝试失败；错误信息：{str(e)}，传入URL：{url}")
+                    logger.warning(f"AutoFilm下载{file_url}遇到错误，第{try_number}尝试失败；错误信息：{str(e)}，传入URL：{file_url}")
                     time.sleep(try_number)
                     try_number += 1
                 else:
                     if try_number > 1:
-                        logger.info(f"{url}重连成功")
+                        logger.info(f"{file_url}下载成功")
                     break
-            for item in items[1:]:
-                if item.endswith("/"):
-                    dir_url_list.append(url + item)
-                else:
-                    files_list.append(url + item)
+                
+            subtitile_file_path = os.path.join(local_path, unquote(os.path.basename(file_url)))
+            os.makedirs(os.path.dirname(subtitile_file_path), exist_ok=True) # 创建递归目录
+            with open(subtitile_file_path, "wb") as f:
+                f.write(response.content)
         
-        logger.info(f"AutoFilm获取到{len(files_list)}个文件，开始生成strm文件")
-
-        for file_url in files_list:
-            if file_url.lower().endswith(tuple(self._video_formats)):
-                strm_file_path = os.path.join(local_path, file_url.replace(webdav_url, '').rsplit(".", 1)[0] + ".strm")
-                os.makedirs(os.path.dirname(strm_file_path), exist_ok=True)
-                with open(strm_file_path, "w") as f:
-                    url_string = file_url.replace("/dav", "/d")
-                    f.write(url_string)
-            elif file_url.lower().endswith(tuple(self._subtitle_formats)):
-                try_number = 1
-                while try_number <= self._try_max:
-                    try:
-                        response = requests.get(file_url.replace("/dav", "/d"))
-                    except Exception as e:
-                        logger.warning(f"AutoFilm下载{file_url}遇到错误，第{try_number}尝试失败；错误信息：{str(e)}，传入URL：{file_url}")
-                        time.sleep(try_number)
-                        try_number += 1
-                    else:
-                        if try_number > 1:
-                            logger.info(f"{file_url}下载成功")
-                        break
-                    
-                subtitile_file_path = os.path.join(local_path, file_url.replace(webdav_url, ''))
-                os.makedirs(os.path.dirname(subtitile_file_path), exist_ok=True)
-                with open(subtitile_file_path, "wb") as f:
-                    f.write(response.content)
-
     def __update_config(self):
         """
         更新配置
@@ -196,9 +207,10 @@ class AutoFilm(_PluginBase):
         self.update_config({
             "enabled": self._enabled,
             "onlyonce": self._onlyonce,
+            "rebuild": self._rebuild,
+            "copy_files": self._copy_files,
             "cron": self._cron,
-            "download_subtitle": self._download_subtitle,
-            "autofilm_confs": self._autofilm_confs
+            "monitor_confs": self._monitor_confs
         })
 
     def get_state(self) -> bool:
@@ -355,7 +367,7 @@ class AutoFilm(_PluginBase):
             "enabled": False,
             "cron": "",
             "onlyonce": False,
-            "download_subtitle": False,
+            "download_subttile": False,
             "autofilm_confs": ""
         }
 
