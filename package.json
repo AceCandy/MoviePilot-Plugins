@@ -17,7 +17,7 @@
   }
     "AlistStrm": {
     "name": "AlistStrm",
-    "description": "定时扫描Alist云盘，自动生成Strm文件。",
+    "description": "扫描Alist云盘，自动生成Strm文件。",
     "version": "1.0",
     "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
     "author": "kufei326",
