@@ -7,7 +7,7 @@
         "author": "kufei326",
         "level": 2
     },
-    "bahastrm": {
+    "Bahastrm": {
         "name": "巴哈姆特动画疯Strm",
         "description": "自动获所有番剧，生成strm文件，mp刮削入库，emby直接播放，免去下载，轻松拥有一个番剧媒体库",
         "version": "1.0",
@@ -15,7 +15,7 @@
         "author": "AceCandy",
         "level": 2
     },
-    "autofilm": {
+    "Autofilm": {
         "name": "AutoFilm—MP插件版",
         "description": "定时扫描Alist云盘，自动生成Strm文件",
         "version": "1.0",
