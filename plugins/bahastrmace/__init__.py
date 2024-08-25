@@ -60,7 +60,7 @@ class BahaStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.6"
+    plugin_version = "1.7"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -123,7 +123,7 @@ class BahaStrmAce(_PluginBase):
                 self._scheduler.start()
 
     @retry(Exception, tries=3, logger=logger, ret=[])
-    def get_name_list(self, url:str = 'https://aniopen.an-i.workers.dev/', folder_name: str = '') -> List[str]:
+    def get_name_list(self, url:str = 'https://ani.v300.eu.org/', folder_name: str = '') -> List[str]:
         rep = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
                            proxies=settings.PROXY if settings.PROXY else None).post(url=url)
         files_json = rep.json()['files']
@@ -141,7 +141,7 @@ class BahaStrmAce(_PluginBase):
 
     @retry(Exception, tries=3, logger=logger, ret=[])
     def get_latest_list(self) -> List:
-        addr = 'https://api.ani.rip/ani-download.xml'
+        addr = 'https://aniapi.v300.eu.org/ani-download.xml'
         ret = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
                            proxies=settings.PROXY if settings.PROXY else None).get_res(addr)
         ret_xml = ret.text
@@ -149,13 +149,18 @@ class BahaStrmAce(_PluginBase):
         dom_tree = xml.dom.minidom.parseString(ret_xml)
         rootNode = dom_tree.documentElement
         items = rootNode.getElementsByTagName("item")
-        ret_array = [DomUtils.tag_value(item, "link", default="").replace('https://resources.ani.rip/', '') for item in items]
+        ret_array = [DomUtils.tag_value(item, "link", default="").replace('https://ani.v300.eu.org/', '') for item in items]
         return ret_array
 
     def __touch_strm_file(self, file_url: str) -> bool:
         # 如果得到的fileurl需要编码后放到链接里拼成src_url
-        src_url = f'https://resources.ani.rip/{quote(file_url)}?d=true'
+        src_url = f'https://ani.v300.eu.org/{quote(file_url)}?d=true'
         
+        if not file_url.endswith(".mp4"):
+            # 下载文件到当前目录
+            logger.debug(f'{file_url} 非视频文件直接下载')
+            return True
+
         file_path = os.path.join(self._storageplace, f'{file_url}.strm')
         if os.path.exists(file_path):
             logger.debug(f'{file_url}.strm 文件已存在')
@@ -181,7 +186,7 @@ class BahaStrmAce(_PluginBase):
                     cnt += 1
         # 全量添加当季
         else:
-            url = f'https://aniopen.an-i.workers.dev/'
+            url = f'https://ani.v300.eu.org/'
             rep = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
                                proxies=settings.PROXY if settings.PROXY else None).post(url=url)
             files_json = rep.json()['files']
@@ -193,7 +198,7 @@ class BahaStrmAce(_PluginBase):
                 for file_name in self.get_name_list(url=f'{url}/{dir_name}/', folder_name=dir_name):
                     if self.__touch_strm_file(file_name):
                         cnt += 1
-                    logger.warn(f'目录{dir_name}: 全量创建了 {cnt} 个strm文件')
+                logger.warn(f'目录{dir_name}: 全量创建了 {cnt} 个strm文件')
                 time.sleep(2)
 
 
