@@ -54,13 +54,13 @@ def retry(ExceptionToCheck: Any,
 
 class BahaStrmAce(_PluginBase):
     # 插件名称
-    plugin_name = "巴哈姆特动画疯Strm（自用修改）"
+    plugin_name = "巴哈姆特Strm（自用修改）"
     # 插件描述
     plugin_desc = "增量/全量获取所有番剧，生成strm文件"
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.2"
+    plugin_version = "1.3"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -122,33 +122,6 @@ class BahaStrmAce(_PluginBase):
                 self._scheduler.print_jobs()
                 self._scheduler.start()
 
-    def __get_ani_season(self, idx_month: int = None) -> str:
-        current_date = datetime.now()
-        current_year = current_date.year
-        current_month = idx_month if idx_month else current_date.month
-        for month in range(current_month, 0, -1):
-            if month in [10, 7, 4, 1]:
-                self._date = f'{current_year}-{month}'
-                return f'{current_year}-{month}'
-
-    def get_ani_season(self, year: int, month: int) -> str:
-        return f'{year}-{month}'
-
-    def get_season_list(self, start_year: int, start_month: int, end_year: int, end_month: int) -> list:
-        season_list = []
-        current_year = end_year
-        current_month = end_month
-        
-        while current_year > start_year or (current_year == start_year and current_month >= start_month):
-            season_list.append(self.get_ani_season(current_year, current_month))
-            if current_month == 1:
-                current_month = 10
-                current_year -= 1
-            else:
-                current_month -= 3
-        
-        return season_list
-
     @retry(Exception, tries=3, logger=logger, ret=[])
     def get_name_list(self, folder_name: str = '') -> List[str]:
         url = f'https://aniopen.an-i.workers.dev/'
@@ -187,10 +160,11 @@ class BahaStrmAce(_PluginBase):
         # 如果得到的fileurl需要编码后放到链接里拼成src_url
         src_url = f'https://resources.ani.rip/{quote(file_url)}?d=true'
         
-        file_path = f'{self._storageplace}/{file_url}.strm'
+        file_path = os.path.join(self._storageplace, f'{file_url}.strm')
         if os.path.exists(file_path):
             logger.debug(f'{file_url}.strm 文件已存在')
             return False
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         try:
             with open(file_path, 'w') as file:
                 file.write(src_url)
@@ -207,13 +181,13 @@ class BahaStrmAce(_PluginBase):
             rss_info_list = self.get_latest_list()
             logger.info(f'本次处理 {len(rss_info_list)} 个文件')
             for rss_info in rss_info_list:
-                if self.__touch_strm_file(file_name=rss_info['title'], file_url=rss_info['link']):
+                if self.__touch_strm_file(file_url=rss_info['link']):
                     cnt += 1
         # 全量添加当季
         else:
             allList = self.get_name_list()
             for file_name in allList:
-                if self.__touch_strm_file(file_name=file_name):
+                if self.__touch_strm_file(file_url=file_name):
                     cnt += 1
         logger.info(f'全量新创建了 {cnt} 个strm文件')
 
@@ -281,7 +255,7 @@ class BahaStrmAce(_PluginBase):
                                         'component': 'VSwitch',
                                         'props': {
                                             'model': 'fulladd',
-                                            'label': '下次所有番剧strm',
+                                            'label': '同步全量番剧strm',
                                         }
                                     }
                                 ]
