@@ -54,13 +54,13 @@ def retry(ExceptionToCheck: Any,
 
 class BahaStrmAce(_PluginBase):
     # 插件名称
-    plugin_name = "巴哈姆特Strm（自用修改）"
+    plugin_name = "Ani Strm增强"
     # 插件描述
     plugin_desc = "增量/全量获取所有番剧，生成strm文件"
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.4"
+    plugin_version = "1.5"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -124,7 +124,7 @@ class BahaStrmAce(_PluginBase):
 
     @retry(Exception, tries=3, logger=logger, ret=[])
     def get_name_list(self, folder_name: str = '') -> List[str]:
-        url = f'https://aniopen.an-i.workers.dev'
+        url = f'https://aniopen.an-i.workers.dev/'
         if folder_name:
             url += folder_name + '/'
 
@@ -316,8 +316,7 @@ class BahaStrmAce(_PluginBase):
                                             'type': 'info',
                                             'variant': 'tonal',
                                             'text': '自动从open ANi抓取下载直链生成strm文件，免去人工订阅下载' + '\n' +
-                                                    '配合目录监控使用，strm文件创建在/downloads/strm' + '\n' +
-                                                    '通过目录监控转移到link媒体库文件夹 如/downloads/link/strm  mp会完成刮削',
+                                                    '建议配合目录监控使用，完成刮削',
                                             'style': 'white-space: pre-line;'
                                         }
                                     },
@@ -327,7 +326,7 @@ class BahaStrmAce(_PluginBase):
                                             'type': 'info',
                                             'variant': 'tonal',
                                             'text': 'emby容器需要设置代理，docker的环境变量必须要有http_proxy代理变量，大小写敏感，具体见readme.' + '\n' +
-                                                    'https://github.com/honue/MoviePilot-Plugins',
+                                                    'https://github.com/AceCandy/MoviePilot-Plugins',
                                             'style': 'white-space: pre-line;'
                                         }
                                     }
