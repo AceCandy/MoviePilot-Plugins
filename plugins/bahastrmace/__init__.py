@@ -13,6 +13,8 @@ from typing import Any, List, Dict, Tuple, Optional
 from app.log import logger
 import xml.dom.minidom
 from app.utils.dom import DomUtils
+from urllib.parse import unquote
+from urllib.parse import quote
 
 
 def retry(ExceptionToCheck: Any,
@@ -58,7 +60,7 @@ class BahaStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.1"
+    plugin_version = "1.2"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -163,7 +165,8 @@ class BahaStrmAce(_PluginBase):
             if file['mimeType'] == 'application/vnd.google-apps.folder':
                 result.extend(self.get_name_list(file['name']))
             else:
-                result.append(folder_name + file['name'] if folder_name else file['name'])
+                folder_path = folder_name + '/' + file['name'] if folder_name else file['name']
+                result.append(folder_path)
 
         return result
 
@@ -173,35 +176,25 @@ class BahaStrmAce(_PluginBase):
         ret = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
                            proxies=settings.PROXY if settings.PROXY else None).get_res(addr)
         ret_xml = ret.text
-        ret_array = []
         # 解析XML
         dom_tree = xml.dom.minidom.parseString(ret_xml)
         rootNode = dom_tree.documentElement
         items = rootNode.getElementsByTagName("item")
-        for item in items:
-            rss_info = {}
-            # 标题
-            title = DomUtils.tag_value(item, "title", default="")
-            # 链接
-            link = DomUtils.tag_value(item, "link", default="")
-            rss_info['title'] = title
-            rss_info['link'] = link
-            ret_array.append(rss_info)
+        ret_array = [DomUtils.tag_value(item, "link", default="").replace('https://resources.ani.rip/', '') for item in items]
         return ret_array
 
-    def __touch_strm_file(self, file_name, file_url: str = None,season: str = None) -> bool:
-        if not file_url:
-            src_url = f'https://resources.ani.rip/{season}/{file_name}?d=true'
-        else:
-            src_url = file_url
-        file_path = f'{self._storageplace}/{file_name}.strm'
+    def __touch_strm_file(self, file_url: str) -> bool:
+        # 如果得到的fileurl需要编码后放到链接里拼成src_url
+        src_url = f'https://resources.ani.rip/{quote(file_url)}?d=true'
+        
+        file_path = f'{self._storageplace}/{file_url}.strm'
         if os.path.exists(file_path):
-            logger.debug(f'{file_name}.strm 文件已存在')
+            logger.debug(f'{file_url}.strm 文件已存在')
             return False
         try:
             with open(file_path, 'w') as file:
                 file.write(src_url)
-                logger.debug(f'创建 {file_name}.strm 文件成功')
+                logger.debug(f'创建 {file_url}.strm 文件成功')
                 return True
         except Exception as e:
             logger.error('创建strm源文件失败：' + str(e))
@@ -218,14 +211,11 @@ class BahaStrmAce(_PluginBase):
                     cnt += 1
         # 全量添加当季
         else:
-            season_list = self.get_season_list(2019, 1,2024, 1)
-            for season in season_list:
-                name_list = self.get_name_list(season)
-                logger.info(f'处理季度 {season} 的 {len(name_list)} 个文件')
-                for file_name in name_list:
-                    if self.__touch_strm_file(file_name=file_name, season=season):
-                        cnt += 1
-        logger.info(f'新创建了 {cnt} 个strm文件')
+            allList = self.get_name_list()
+            for file_name in allList:
+                if self.__touch_strm_file(file_name=file_name):
+                    cnt += 1
+        logger.info(f'全量新创建了 {cnt} 个strm文件')
 
     def get_state(self) -> bool:
         return self._enabled
