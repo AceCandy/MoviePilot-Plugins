@@ -158,6 +158,10 @@ class BahaStrmAce(_PluginBase):
         src_url = f'https://ani.v300.eu.org/{quote(file_url)}?d=true'
         
         if not file_url.endswith(".mp4"):
+            file_path = os.path.join(self._storageplace, file_url)
+            if os.path.exists(file_path):
+                logger.debug(f'{file_url} 非视频文件已存在')
+                return False
             # 下载文件到当前目录
             logger.debug(f'{file_url} 非视频文件直接下载: {src_url}')
             try:
