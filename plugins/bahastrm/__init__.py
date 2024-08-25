@@ -148,14 +148,24 @@ class BahaStrm(_PluginBase):
         return season_list
 
     @retry(Exception, tries=3, logger=logger, ret=[])
-    def get_name_list(self, season: str) -> List:
-        url = f'https://aniopen.an-i.workers.dev/{season}/'
+    def get_name_list(self, folder_name: str = '') -> List[str]:
+        url = f'https://aniopen.an-i.workers.dev/'
+        if folder_name:
+            url += folder_name + '/'
 
         rep = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
                            proxies=settings.PROXY if settings.PROXY else None).post(url=url)
-        logger.debug(rep.text)
+        logger.debug(rep.json())
         files_json = rep.json()['files']
-        return [file['name'] for file in files_json]
+
+        result = []
+        for file in files_json:
+            if file['mimeType'] == 'application/vnd.google-apps.folder':
+                result.extend(self.get_name_list(file['name']))
+            else:
+                result.append(folder_name + file['name'] if folder_name else file['name'])
+
+        return result
 
     @retry(Exception, tries=3, logger=logger, ret=[])
     def get_latest_list(self) -> List:
