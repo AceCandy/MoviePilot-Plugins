@@ -36,7 +36,7 @@ def retry(ExceptionToCheck: Any,
                 try:
                     return f(*args, **kwargs)
                 except ExceptionToCheck as e:
-                    msg = f"未获取到文件信息，{mdelay}秒后重试 ..."
+                    msg = f"未获取到文件信息，{mdelay}秒后重试 ...{str(e)}"
                     if logger:
                         logger.warn(msg)
                     else:
@@ -45,7 +45,7 @@ def retry(ExceptionToCheck: Any,
                     mtries -= 1
                     mdelay *= backoff
             if logger:
-                logger.warn('https://aniopen.an-i.workers.dev/ 请确保当前季度番剧文件夹存在')
+                logger.warn('https://ani.v300.eu.org/ 请确保当前季度番剧文件夹存在')
             return ret
 
         return f_retry
@@ -61,7 +61,7 @@ class BahaStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.8"
+    plugin_version = "1.9"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -159,13 +159,16 @@ class BahaStrmAce(_PluginBase):
         
         if not file_url.endswith(".mp4"):
             # 下载文件到当前目录
-            logger.debug(f'{file_url} 非视频文件直接下载')
-            request = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
-                                   proxies=settings.PROXY if settings.PROXY else None).get_res(src_url)
-            if request and request.status_code == 200:
-                sub_file = self._storageplace / file_url
-                sub_file.write_bytes(request.content)
-                return True
+            logger.debug(f'{file_url} 非视频文件直接下载: {src_url}')
+            try:
+                request = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
+                                        proxies=settings.PROXY if settings.PROXY else None).get_res(src_url)
+                if request and request.status_code == 200:
+                    sub_file = Path(self._storageplace) / file_url
+                    sub_file.write_bytes(request.content)
+                    return True
+            except Exception as e:
+                logger.error('非视频文件直接下载失败：' + str(e))
             return False
 
         file_path = os.path.join(self._storageplace, f'{file_url.replace(".mp4",".strm")}')
