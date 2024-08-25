@@ -28,7 +28,7 @@ class CloudStrmAce(_PluginBase):
     # 插件版本
     plugin_version = "0.1"
     # 插件作者
-    plugin_author = "andy"
+    plugin_author = "AceCandy"
     # 作者主页
     author_url = "https://github.com/AceCandy"
     # 插件配置项ID前缀
