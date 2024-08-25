@@ -52,17 +52,17 @@ def retry(ExceptionToCheck: Any,
 
 class BahaStrm(_PluginBase):
     # 插件名称
-    plugin_name = "巴哈姆特动画疯Strm"
+    plugin_name = "巴哈姆特动画疯Strm（自用修改）"
     # 插件描述
-    plugin_desc = "自动获所有番剧，生成strm文件，mp刮削入库，emby直接播放，免去下载，轻松拥有一个番剧媒体库"
+    plugin_desc = "增量/全量获取所有番剧，生成strm文件"
     # 插件图标
-    plugin_icon = "https://raw.githubusercontent.com/Akimio521/MoviePilot-Plugins/main/icons/bahastrm.png"
+    plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
     plugin_version = "1.0"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
-    author_url = "https://github.com/Akimio521"
+    author_url = "https://github.com/AceCandy"
     # 插件配置项ID前缀
     plugin_config_prefix = "bahastrm_"
     # 加载顺序
