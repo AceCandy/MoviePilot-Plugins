@@ -60,7 +60,7 @@ class BahaStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.3"
+    plugin_version = "1.4"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -124,13 +124,12 @@ class BahaStrmAce(_PluginBase):
 
     @retry(Exception, tries=3, logger=logger, ret=[])
     def get_name_list(self, folder_name: str = '') -> List[str]:
-        url = f'https://aniopen.an-i.workers.dev/'
+        url = f'https://aniopen.an-i.workers.dev'
         if folder_name:
             url += folder_name + '/'
 
         rep = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
                            proxies=settings.PROXY if settings.PROXY else None).post(url=url)
-        logger.debug(rep.json())
         files_json = rep.json()['files']
 
         result = []
@@ -140,6 +139,7 @@ class BahaStrmAce(_PluginBase):
             else:
                 folder_path = folder_name + '/' + file['name'] if folder_name else file['name']
                 result.append(folder_path)
+                logger.debug(f'路径添加进来: {folder_path}')
 
         return result
 
