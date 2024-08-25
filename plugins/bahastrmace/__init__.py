@@ -132,7 +132,7 @@ class BahaStrmAce(_PluginBase):
         result = []
         for file in files_json:
             if file['mimeType'] == 'application/vnd.google-apps.folder':
-                result.extend(self.get_name_list(url=urljoin(url, file['name']), folder_name=file['name']))
+                result.extend(self.get_name_list(url=urljoin(url, quote(file['name'])), folder_name=file['name']))
             else:
                 folder_path = f"{folder_name}/{file['name']}" if folder_name else file['name']
                 result.append(folder_path)
