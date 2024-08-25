@@ -61,7 +61,7 @@ class BahaStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.9.2"
+    plugin_version = "1.9.3"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -132,7 +132,7 @@ class BahaStrmAce(_PluginBase):
         result = []
         for file in files_json:
             if file['mimeType'] == 'application/vnd.google-apps.folder':
-                result.extend(self.get_name_list(url=f'{url}{quote(file["name"])}/', folder_name=file['name']))
+                result.extend(self.get_name_list(url=f'{url}{quote(file["name"])}/', folder_name=f"{folder_name}/{file['name']}"))
             else:
                 folder_path = f"{folder_name}/{file['name']}" if folder_name else file['name']
                 result.append(folder_path)
