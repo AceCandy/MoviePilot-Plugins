@@ -209,7 +209,7 @@ class BahaStrmAce(_PluginBase):
             logger.info(f'全量根目录: {allList}')
             for dir_name in allList:
                 cnt = 0
-                for file_name in self.get_name_list(url=f'{url}/{dir_name}/', folder_name=dir_name):
+                for file_name in self.get_name_list(url=f'{url}{dir_name}/', folder_name=dir_name):
                     if self.__touch_strm_file(file_name):
                         cnt += 1
                 logger.warn(f'目录{dir_name}: 全量创建了 {cnt} 个strm文件')
