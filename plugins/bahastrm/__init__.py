@@ -50,7 +50,7 @@ def retry(ExceptionToCheck: Any,
     return deco_retry
 
 
-class BahaStrm(_PluginBase):
+class BahaStrmAce(_PluginBase):
     # 插件名称
     plugin_name = "巴哈姆特动画疯Strm（自用修改）"
     # 插件描述
@@ -58,13 +58,13 @@ class BahaStrm(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.0"
+    plugin_version = "1.1"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
     author_url = "https://github.com/AceCandy"
     # 插件配置项ID前缀
-    plugin_config_prefix = "bahastrm_"
+    plugin_config_prefix = "bahastrmace_"
     # 加载顺序
     plugin_order = 20
     # 可使用的用户级别
@@ -408,6 +408,6 @@ class BahaStrm(_PluginBase):
 
 
 if __name__ == "__main__":
-    bahastrm = BahaStrm()
-    name_list = bahastrm.get_latest_list()
+    bahastrmace = BahaStrmAce()
+    name_list = bahastrmace.get_latest_list()
     print(name_list)
