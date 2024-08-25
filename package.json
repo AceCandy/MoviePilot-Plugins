@@ -15,12 +15,20 @@
         "author": "AceCandy",
         "level": 2
     },
-    "Autofilm": {
+    "AutoFilm": {
         "name": "AutoFilm—MP插件版",
         "description": "定时扫描Alist云盘，自动生成Strm文件",
         "version": "1.0",
         "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
         "author": "AceCandy",
         "level": 1
+    },
+    "CloudStrmAce": {
+        "name": "云盘增量Strm增强",
+        "description": "增量/全量获取所有番剧，生成strm文件",
+        "version": "0.1",
+        "icon": "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png",
+        "author": "AceCandy",
+        "level": 2
     }
 }
