@@ -60,7 +60,7 @@ class BahaStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.5"
+    plugin_version = "1.6"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -123,11 +123,7 @@ class BahaStrmAce(_PluginBase):
                 self._scheduler.start()
 
     @retry(Exception, tries=3, logger=logger, ret=[])
-    def get_name_list(self, folder_name: str = '') -> List[str]:
-        url = f'https://aniopen.an-i.workers.dev/'
-        if folder_name:
-            url += folder_name + '/'
-
+    def get_name_list(self, url:str = 'https://aniopen.an-i.workers.dev/', folder_name: str = '') -> List[str]:
         rep = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
                            proxies=settings.PROXY if settings.PROXY else None).post(url=url)
         files_json = rep.json()['files']
@@ -135,7 +131,7 @@ class BahaStrmAce(_PluginBase):
         result = []
         for file in files_json:
             if file['mimeType'] == 'application/vnd.google-apps.folder':
-                result.extend(self.get_name_list(file['name']))
+                result.extend(self.get_name_list(url=url+file['name'], folder_name=file['name']))
             else:
                 folder_path = folder_name + '/' + file['name'] if folder_name else file['name']
                 result.append(folder_path)
@@ -185,11 +181,21 @@ class BahaStrmAce(_PluginBase):
                     cnt += 1
         # 全量添加当季
         else:
-            allList = self.get_name_list()
-            for file_name in allList:
-                if self.__touch_strm_file(file_url=file_name):
-                    cnt += 1
-        logger.info(f'全量新创建了 {cnt} 个strm文件')
+            url = f'https://aniopen.an-i.workers.dev/'
+            rep = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
+                               proxies=settings.PROXY if settings.PROXY else None).post(url=url)
+            files_json = rep.json()['files']
+            # 获取根目录
+            allList = [file['name'] for file in files_json]
+            logger.info(f'全量根目录: {allList}')
+            for dir_name in allList:
+                cnt = 0
+                for file_name in self.get_name_list(url=f'{url}/{dir_name}/', folder_name=dir_name):
+                    if self.__touch_strm_file(file_name):
+                        cnt += 1
+                    logger.warn(f'目录{dir_name}: 全量创建了 {cnt} 个strm文件')
+                time.sleep(2)
+
 
     def get_state(self) -> bool:
         return self._enabled
