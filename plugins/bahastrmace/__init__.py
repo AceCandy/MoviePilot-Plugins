@@ -1,6 +1,10 @@
 import os
 import time
+from pathlib import Path
 from datetime import datetime, timedelta
+from urllib.parse import quote, urljoin
+import xml.dom.minidom
+from typing import Any, List, Dict, Tuple, Optional
 
 import pytz
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -9,12 +13,9 @@ from apscheduler.triggers.cron import CronTrigger
 from app.utils.http import RequestUtils
 from app.core.config import settings
 from app.plugins import _PluginBase
-from typing import Any, List, Dict, Tuple, Optional
 from app.log import logger
-import xml.dom.minidom
 from app.utils.dom import DomUtils
-from urllib.parse import unquote
-from urllib.parse import quote
+
 
 
 def retry(ExceptionToCheck: Any,
@@ -60,7 +61,7 @@ class BahaStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.7"
+    plugin_version = "1.8"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -131,9 +132,9 @@ class BahaStrmAce(_PluginBase):
         result = []
         for file in files_json:
             if file['mimeType'] == 'application/vnd.google-apps.folder':
-                result.extend(self.get_name_list(url=url+file['name'], folder_name=file['name']))
+                result.extend(self.get_name_list(url=urljoin(url, file['name']), folder_name=file['name']))
             else:
-                folder_path = folder_name + '/' + file['name'] if folder_name else file['name']
+                folder_path = f"{folder_name}/{file['name']}" if folder_name else file['name']
                 result.append(folder_path)
                 logger.debug(f'路径添加进来: {folder_path}')
 
@@ -159,9 +160,15 @@ class BahaStrmAce(_PluginBase):
         if not file_url.endswith(".mp4"):
             # 下载文件到当前目录
             logger.debug(f'{file_url} 非视频文件直接下载')
-            return True
+            request = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
+                                   proxies=settings.PROXY if settings.PROXY else None).get_res(src_url)
+            if request and request.status_code == 200:
+                sub_file = self._storageplace / file_url
+                sub_file.write_bytes(request.content)
+                return True
+            return False
 
-        file_path = os.path.join(self._storageplace, f'{file_url}.strm')
+        file_path = os.path.join(self._storageplace, f'{file_url.replace(".mp4",".strm")}')
         if os.path.exists(file_path):
             logger.debug(f'{file_url}.strm 文件已存在')
             return False
