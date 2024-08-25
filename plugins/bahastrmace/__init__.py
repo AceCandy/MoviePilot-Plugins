@@ -128,7 +128,7 @@ class BahaStrmAce(_PluginBase):
         rep = RequestUtils(ua=settings.USER_AGENT if settings.USER_AGENT else None,
                            proxies=settings.PROXY if settings.PROXY else None).post(url=url)
         files_json = rep.json()['files']
-
+        logger.info(f"请求拉取路径: {url}")
         result = []
         for file in files_json:
             if file['mimeType'] == 'application/vnd.google-apps.folder':
