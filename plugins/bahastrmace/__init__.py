@@ -134,9 +134,10 @@ class BahaStrmAce(_PluginBase):
             if file['mimeType'] == 'application/vnd.google-apps.folder':
                 result.extend(self.get_name_list(url=f'{url}{quote(file["name"])}/', folder_name=f"{folder_name}/{file['name']}"))
             else:
-                folder_path = f"{folder_name}/{file['name']}" if folder_name else file['name']
-                result.append(folder_path)
-                logger.debug(f'路径添加进来: {folder_path}')
+                if not file['name'].endswith('.nfo'):
+                    folder_path = f"{folder_name}/{file['name']}" if folder_name else file['name']
+                    result.append(folder_path)
+                    logger.debug(f'路径添加进来: {folder_path}')
 
         return result
 
