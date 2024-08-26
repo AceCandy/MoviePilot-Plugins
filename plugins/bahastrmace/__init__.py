@@ -137,7 +137,7 @@ class BahaStrmAce(_PluginBase):
                 if not file['name'].endswith('.nfo'):
                     folder_path = f"{folder_name}/{file['name']}" if folder_name else file['name']
                     result.append(folder_path)
-                    logger.debug(f'路径添加进来: {folder_path}')
+                    #logger.debug(f'路径添加进来: {folder_path}')
 
         return result
 
@@ -179,7 +179,7 @@ class BahaStrmAce(_PluginBase):
         new_file_path = os.path.splitext(file_url)[0] + ".strm"  # 将拓展名替换为strm
         file_path = os.path.join(self._storageplace, new_file_path)
         if os.path.exists(file_path):
-            logger.debug(f'{file_url}.strm 文件已存在')
+            logger.debug(f'{file_path} 文件已存在')
             return False
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         try:
