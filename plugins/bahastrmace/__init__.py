@@ -158,7 +158,7 @@ class BahaStrmAce(_PluginBase):
         # 如果得到的fileurl需要编码后放到链接里拼成src_url
         src_url = f'https://ani.v300.eu.org/{quote(file_url)}?d=true'
         
-        if not file_url.endswith(".mp4") or file_url.endswith(".mkv"):
+        if not (file_url.endswith(".mp4") or file_url.endswith(".mkv")):
             file_path = os.path.join(self._storageplace, file_url)
             if os.path.exists(file_path):
                 logger.debug(f'{file_url} 非视频文件已存在')
