@@ -10,7 +10,7 @@
     "BahaStrmAce": {
         "name": "Ani Strm增强",
         "description": "增量/全量获取所有番剧，生成strm文件",
-        "version": "1.9.3",
+        "version": "1.9.4",
         "icon": "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png",
         "author": "AceCandy",
         "level": 2

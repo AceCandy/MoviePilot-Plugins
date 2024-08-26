@@ -61,7 +61,7 @@ class BahaStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/honue/MoviePilot-Plugins/main/icons/anistrm.png"
     # 插件版本
-    plugin_version = "1.9.3"
+    plugin_version = "1.9.4"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -157,7 +157,7 @@ class BahaStrmAce(_PluginBase):
         # 如果得到的fileurl需要编码后放到链接里拼成src_url
         src_url = f'https://ani.v300.eu.org/{quote(file_url)}?d=true'
         
-        if not file_url.endswith(".mp4"):
+        if not file_url.endswith(".mp4") or file_url.endswith(".mkv"):
             file_path = os.path.join(self._storageplace, file_url)
             if os.path.exists(file_path):
                 logger.debug(f'{file_url} 非视频文件已存在')
@@ -175,7 +175,8 @@ class BahaStrmAce(_PluginBase):
                 logger.error('非视频文件直接下载失败：' + str(e))
             return False
 
-        file_path = os.path.join(self._storageplace, f'{file_url.replace(".mp4",".strm")}')
+        new_file_path = os.path.splitext(file_url)[0] + ".strm"  # 将拓展名替换为strm
+        file_path = os.path.join(self._storageplace, new_file_path)
         if os.path.exists(file_path):
             logger.debug(f'{file_url}.strm 文件已存在')
             return False
