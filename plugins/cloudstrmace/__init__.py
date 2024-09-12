@@ -26,7 +26,7 @@ class CloudStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "0.4"
+    plugin_version = "0.5"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -200,17 +200,17 @@ class CloudStrmAce(_PluginBase):
                 for file in files:
                     increment_file = Path(root) / file
                     if not increment_file.exists():
-                        return
+                        continue
             
                     # 回收站及隐藏的文件不处理
                     if any(marker in str(increment_file) for marker in ["/@Recycle", "/#recycle", "/.", "/@eaDir"]):
                         logger.info(f"{increment_file} 是回收站或隐藏的文件，跳过处理")
-                        return
+                        continue
 
                     # 非保留文件直接跳过
                     file_suffix = increment_file.suffix
                     if not self._is_valid_file(file_suffix):
-                        return
+                        continue
                     logger.info(f"扫描到增量文件 {increment_file}，正在开始处理")
 
                     # 移动到目标目录
@@ -245,14 +245,14 @@ class CloudStrmAce(_PluginBase):
     def _is_valid_file(self, file_suffix):
         nomedia_exts = [ext.strip() for ext in self._rmt_nomediaext.split(",")]
         media_exts = [ext.strip() for ext in self._rmt_mediaext.split(",")]
-
+    
         if file_suffix not in nomedia_exts and file_suffix not in media_exts:
             return False
         if not self._copy_files and file_suffix not in media_exts:
             return False
         return True
 
-     def _clean_empty_parent_dirs(self, increment_file):
+    def _clean_empty_parent_dirs(self, increment_file):
         parent_paths = list(Path(increment_file).parents)
         for parent_path in parent_paths:
             if parent_path.name in self._no_del_dirs:
