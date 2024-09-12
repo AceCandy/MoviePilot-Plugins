@@ -26,7 +26,7 @@ class CloudStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "0.5"
+    plugin_version = "0.6"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -198,17 +198,17 @@ class CloudStrmAce(_PluginBase):
 
                 # 处理文件
                 for file in files:
-                    increment_file = Path(root) / file
-                    if not increment_file.exists():
+                    increment_file = os.path.join(root, file)
+                    if not Path(increment_file).exists():
                         continue
             
                     # 回收站及隐藏的文件不处理
-                    if any(marker in str(increment_file) for marker in ["/@Recycle", "/#recycle", "/.", "/@eaDir"]):
+                    if any(marker in increment_file for marker in ["/@Recycle", "/#recycle", "/.", "/@eaDir"]):
                         logger.info(f"{increment_file} 是回收站或隐藏的文件，跳过处理")
                         continue
 
                     # 非保留文件直接跳过
-                    file_suffix = increment_file.suffix
+                    file_suffix = Path(file).suffix
                     if not self._is_valid_file(file_suffix):
                         continue
                     logger.info(f"扫描到增量文件 {increment_file}，正在开始处理")
@@ -230,7 +230,7 @@ class CloudStrmAce(_PluginBase):
                         logger.info(f"复制增量文件 {increment_file} 到 {source_file}")
 
                     # 扫描云盘文件，判断是否有对应strm
-                    self.__strm(source_file, str(increment_file))
+                    self.__strm(source_file, increment_file)
                     logger.info(f"增量文件 {increment_file} 处理完成")
 
                     # 判断当前媒体父路径下是否有媒体文件，如有则无需遍历父级
