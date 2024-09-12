@@ -26,7 +26,7 @@ class CloudStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "0.6"
+    plugin_version = "0.7"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -222,13 +222,6 @@ class CloudStrmAce(_PluginBase):
                     target_dir = Path(source_file).parent
                     target_dir.mkdir(parents=True, exist_ok=True)
 
-                    if self._ismove:
-                        shutil.move(increment_file, source_file, copy_function=shutil.copy2)
-                        logger.info(f"移动增量文件 {increment_file} 到 {source_file}")
-                    else:    
-                        shutil.copy2(increment_file, source_file)
-                        logger.info(f"复制增量文件 {increment_file} 到 {source_file}")
-
                     # 扫描云盘文件，判断是否有对应strm
                     self.__strm(source_file, increment_file)
                     logger.info(f"增量文件 {increment_file} 处理完成")
@@ -369,8 +362,8 @@ class CloudStrmAce(_PluginBase):
                         else:
                             if self._copy_files and Path(dest_file).suffix in [ext.strip() for ext in self._rmt_nomediaext.split(",")]:
                                 # 其他nfo、jpg等复制文件
-                                shutil.copy2(source_file, dest_file)
-                                logger.info(f"复制非媒体文件 {source_file} 到 {dest_file}")
+                                shutil.copy2(dest_file, source_file)
+                                logger.info(f"复制增量文件 {dest_file} 到 {source_file}")
         except Exception as e:
             logger.error(f"create strm file error: {e}")
             print(str(e))
