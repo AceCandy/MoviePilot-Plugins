@@ -26,7 +26,7 @@ class CloudStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "0.3"
+    plugin_version = "0.4"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -198,22 +198,19 @@ class CloudStrmAce(_PluginBase):
 
                 # 处理文件
                 for file in files:
-                    increment_file = os.path.join(root, file)
-                    if not Path(increment_file).exists():
-                        continue
+                    increment_file = Path(root) / file
+                    if not increment_file.exists():
+                        return
+            
                     # 回收站及隐藏的文件不处理
-                    if (increment_file.find("/@Recycle") != -1
-                            or increment_file.find("/#recycle") != -1
-                            or increment_file.find("/.") != -1
-                            or increment_file.find("/@eaDir") != -1):
+                    if any(marker in str(increment_file) for marker in ["/@Recycle", "/#recycle", "/.", "/@eaDir"]):
                         logger.info(f"{increment_file} 是回收站或隐藏的文件，跳过处理")
-                        continue
+                        return
 
-                    # 不复制非媒体文件时直接过滤掉非媒体文件
-                    if not self._copy_files and Path(file).suffix not in [ext.strip() for ext in
-                                                                          self._rmt_mediaext.split(",")]:
-                        continue
-
+                    # 非保留文件直接跳过
+                    file_suffix = increment_file.suffix
+                    if not self._is_valid_file(file_suffix):
+                        return
                     logger.info(f"扫描到增量文件 {increment_file}，正在开始处理")
 
                     # 移动到目标目录
@@ -222,8 +219,8 @@ class CloudStrmAce(_PluginBase):
                     source_file = increment_file.replace(increment_dir, source_dir)
 
                     # 判断目标文件是否存在
-                    if not Path(source_file).parent.exists():
-                        Path(source_file).parent.mkdir(parents=True, exist_ok=True)
+                    target_dir = Path(source_file).parent
+                    target_dir.mkdir(parents=True, exist_ok=True)
 
                     if self._ismove:
                         shutil.move(increment_file, source_file, copy_function=shutil.copy2)
@@ -233,30 +230,39 @@ class CloudStrmAce(_PluginBase):
                         logger.info(f"复制增量文件 {increment_file} 到 {source_file}")
 
                     # 扫描云盘文件，判断是否有对应strm
-                    self.__strm(source_file, increment_file)
+                    self.__strm(source_file, str(increment_file))
                     logger.info(f"增量文件 {increment_file} 处理完成")
 
                     # 判断当前媒体父路径下是否有媒体文件，如有则无需遍历父级
-                    if not SystemUtils.exits_files(Path(increment_file).parent, []):
-                        # 判断父目录是否为空, 为空则删除
-                        for parent_path in Path(increment_file).parents:
-                            if parent_path.name in self._no_del_dirs:
-                                break
-                            if str(parent_path.name) == str(increment_dir):
-                                break
-                            if str(parent_path.parent) != str(Path(increment_file).root):
-                                # 父目录非根目录，才删除父目录
-                                if not SystemUtils.exits_files(parent_path, []):
-                                    # 当前路径下没有媒体文件则删除
-                                    shutil.rmtree(parent_path)
-                                    logger.warn(f"增量非保留目录 {parent_path} 已删除")
+                    self._clean_empty_parent_dirs(increment_file)
 
         logger.info("云盘strm生成任务完成")
         if event:
             self.post_message(channel=event.event_data.get("channel"),
                               title="云盘strm生成任务完成！",
                               userid=event.event_data.get("user"))
+            
+    def _is_valid_file(self, file_suffix):
+        nomedia_exts = [ext.strip() for ext in self._rmt_nomediaext.split(",")]
+        media_exts = [ext.strip() for ext in self._rmt_mediaext.split(",")]
 
+        if file_suffix not in nomedia_exts and file_suffix not in media_exts:
+            return False
+        if not self._copy_files and file_suffix not in media_exts:
+            return False
+        return True
+
+     def _clean_empty_parent_dirs(self, increment_file):
+        parent_paths = list(Path(increment_file).parents)
+        for parent_path in parent_paths:
+            if parent_path.name in self._no_del_dirs:
+                break
+            if parent_path == Path(increment_file).parent:
+                break
+            if parent_path.parent != Path(increment_file).root:
+                if not any(parent_path.iterdir()):
+                    shutil.rmtree(parent_path)
+                    logger.warning(f"增量非保留目录 {parent_path} 已删除")
     # def move_file(self,
     #               file_path: Path,
     #               dest_path: Path,
