@@ -26,7 +26,7 @@ class CloudStrmAce(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "0.2"
+    plugin_version = "0.3"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -47,8 +47,8 @@ class CloudStrmAce(_PluginBase):
     _copy_files = False
     _https = False
     _no_del_dirs = None
-    _rmt_mediaext = ".mp4, .mkv, .ts, .iso,.rmvb, .avi, .mov, .mpeg,.mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .strm,.tp, .f4v"
-    _rmt_nomediaext = ".nfo, .jpg, .jpeg, .png;, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
+    _rmt_mediaext = ".mp4, .mkv, .ts, .iso, .rmvb, .avi, .mov, .mpeg, .mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .tp, .f4v"
+    _rmt_nomediaext = ".nfo, .jpg, .jpeg, .png, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
     _observer = []
 
     # 公开属性
@@ -81,9 +81,9 @@ class CloudStrmAce(_PluginBase):
             self._monitor_confs = config.get("monitor_confs")
             self._no_del_dirs = config.get("no_del_dirs")
             self._rmt_mediaext = config.get(
-                "rmt_mediaext") or ".mp4, .mkv, .ts, .iso,.rmvb, .avi, .mov, .mpeg,.mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .strm,.tp, .f4v"
+                "rmt_mediaext") or ".mp4, .mkv, .ts, .iso, .rmvb, .avi, .mov, .mpeg, .mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .tp, .f4v"
             self._rmt_nomediaext = config.get(
-                "rmt_nomediaext") or ".nfo, .jpg, .jpeg, .png;, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
+                "rmt_nomediaext") or ".nfo, .jpg, .jpeg, .png, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
 
         # 停止现有任务
         self.stop_service()
@@ -662,7 +662,7 @@ class CloudStrmAce(_PluginBase):
                                             'model': 'rmt_mediaext',
                                             'label': '视频格式',
                                             'rows': 2,
-                                            'placeholder': ".mp4, .mkv, .ts, .iso,.rmvb, .avi, .mov, .mpeg,.mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .strm,.tp, .f4v"
+                                            'placeholder': ".mp4, .mkv, .ts, .iso, .rmvb, .avi, .mov, .mpeg, .mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .tp, .f4v"
                                         }
                                     }
                                 ]
@@ -684,7 +684,7 @@ class CloudStrmAce(_PluginBase):
                                             'model': 'rmt_nomediaext',
                                             'label': '非媒体格式',
                                             'rows': 2,
-                                            'placeholder': ".nfo, .jpg, .jpeg, .png;, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
+                                            'placeholder': ".nfo, .jpg, .jpeg, .png, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
                                         }
                                     }
                                 ]
@@ -781,8 +781,8 @@ class CloudStrmAce(_PluginBase):
             "https": False,
             "monitor_confs": "",
             "no_del_dirs": "",
-            "rmt_mediaext": ".mp4, .mkv, .ts, .iso,.rmvb, .avi, .mov, .mpeg,.mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .strm,.tp, .f4v",
-            "rmt_nomediaext": ".nfo, .jpg, .jpeg, .png;, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
+            "rmt_mediaext": ".mp4, .mkv, .ts, .iso, .rmvb, .avi, .mov, .mpeg, .mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .tp, .f4v",
+            "rmt_nomediaext": ".nfo, .jpg, .jpeg, .png, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
         }
 
     def get_page(self) -> List[dict]:
