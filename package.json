@@ -26,7 +26,7 @@
     "CloudStrmAce": {
         "name": "云盘增量Strm增强",
         "description": "增量/全量获取所有番剧，生成strm文件",
-        "version": "0.1",
+        "version": "0.2",
         "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
         "author": "AceCandy",
         "level": 2
