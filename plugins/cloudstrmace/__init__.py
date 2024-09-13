@@ -20,12 +20,15 @@ class CloudStrmAce(_PluginBase):
     plugin_name = "增量生成云盘Strm"
     plugin_desc = "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "0.8"
+    plugin_version = "0.9"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "cloudstrmace_"
     plugin_order = 26
     auth_level = 2
+
+    # 退出事件
+    _event = threading.Event()
 
     # 默认属性
     default_mediaext = ".mp4, .mkv, .ts, .iso, .rmvb, .avi, .mov, .mpeg, .mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .tp, .f4v"
@@ -385,7 +388,7 @@ class CloudStrmAce(_PluginBase):
                         continue
 
                     if increment_dir == media_dir:
-                        logger.info(f"{increment_dir} 增量目录和媒体目录相同，不进行移动")
+                        #logger.info(f"{increment_dir} 增量目录和媒体目录相同，不进行移动")
                         media_file = increment_file
                     else:
                         # 移动后文件路径
@@ -395,11 +398,11 @@ class CloudStrmAce(_PluginBase):
 
                     # 扫描云盘文件生成strm，需要先判断是否有对应strm
                     self.__strm(media_file, media_dir, cloud_dir, cloud_url)
-                    logger.info(f"增量文件 {increment_file} 处理完成")
+                    #logger.info(f"增量文件 {increment_file} 处理完成")
 
                     # 判断当前媒体父路径下是否有媒体文件，如有则无需遍历父级
                     self._clean_empty_parent_dirs(increment_file)
-        logger.info(f"{self.plugin_name}任务完成>>>>>>>>>>>>>>>")
+        logger.info(f"{self.plugin_name}任务完成>>>>>>>>>>>>>>>\n\n\n\n")
 
     def _is_valid_file(self, file_suffix):
         if file_suffix not in self.nomedia_exts and file_suffix not in self.media_exts:
@@ -471,7 +474,7 @@ class CloudStrmAce(_PluginBase):
                 logger.info(f"strm文件已存在 {strm_path}")
                 return
 
-            logger.info(f"替换前本地路径 >> {media_file}")
+            #logger.info(f"替换前本地路径 >> {media_file}")
             # 云盘模式
             if cloud_url.startswith("http"):
                 # 替换路径中的\为/
