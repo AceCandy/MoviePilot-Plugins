@@ -1,5 +1,6 @@
 import os
 import shutil
+import threading
 import urllib.parse
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -20,7 +21,7 @@ class CloudStrmAce(_PluginBase):
     plugin_name = "增量生成云盘Strm"
     plugin_desc = "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "0.9"
+    plugin_version = "1.0"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "cloudstrmace_"
