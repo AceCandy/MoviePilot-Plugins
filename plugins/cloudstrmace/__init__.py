@@ -21,7 +21,7 @@ class CloudStrmAce(_PluginBase):
     plugin_name = "增量生成云盘Strm"
     plugin_desc = "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.0"
+    plugin_version = "1.1"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "cloudstrmace_"
@@ -396,11 +396,10 @@ class CloudStrmAce(_PluginBase):
                         media_file = increment_file.replace(increment_dir, media_dir)
                         # 判断目标路径的文件夹是否存在
                         Path(media_file).parent.mkdir(parents=True, exist_ok=True)
-
+                        shutil.move(increment_file, media_file, copy_function=shutil.copy2)
                     # 扫描云盘文件生成strm，需要先判断是否有对应strm
                     self.__strm(media_file, media_dir, cloud_dir, cloud_url)
                     #logger.info(f"增量文件 {increment_file} 处理完成")
-
                     # 判断当前媒体父路径下是否有媒体文件，如有则无需遍历父级
                     self._clean_empty_parent_dirs(increment_file)
         logger.info(f"{self.plugin_name}任务完成>>>>>>>>>>>>>>>\n\n\n\n")
