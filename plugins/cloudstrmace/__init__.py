@@ -20,9 +20,9 @@ from app.utils.system import SystemUtils
 
 class CloudStrmAce(_PluginBase):
     # 插件名称
-    plugin_name = "云盘增量Strm增强"
+    plugin_name = "生成云盘Strm"
     # 插件描述
-    plugin_desc = "定时扫描云盘文件，生成Strm文件（增量版）。"
+    plugin_desc = "扫描本地文件，转移到云盘并生成Strm文件"
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
@@ -36,7 +36,7 @@ class CloudStrmAce(_PluginBase):
     # 加载顺序
     plugin_order = 26
     # 可使用的用户级别
-    auth_level = 1
+    auth_level = 2
 
     # 私有属性
     _enabled = False
@@ -45,7 +45,6 @@ class CloudStrmAce(_PluginBase):
     _onlyonce = False
     _ismove = False
     _copy_files = False
-    _https = False
     _no_del_dirs = None
     _rmt_mediaext = ".mp4, .mkv, .ts, .iso, .rmvb, .avi, .mov, .mpeg, .mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .tp, .f4v"
     _rmt_nomediaext = ".nfo, .jpg, .jpeg, .png, .svg, .ass, .srt, .sup, .mp3, .flac, .wav, .aac"
@@ -76,7 +75,6 @@ class CloudStrmAce(_PluginBase):
             self._cron = config.get("cron")
             self._onlyonce = config.get("onlyonce")
             self._ismove = config.get("ismove")
-            self._https = config.get("https")
             self._copy_files = config.get("copy_files")
             self._monitor_confs = config.get("monitor_confs")
             self._no_del_dirs = config.get("no_del_dirs")
@@ -211,7 +209,6 @@ class CloudStrmAce(_PluginBase):
                     file_suffix = Path(file).suffix
                     if not self._is_valid_file(file_suffix):
                         continue
-                    logger.info(f"扫描到增量文件 {increment_file}，正在开始处理")
 
                     # 移动到目标目录
                     source_dir = self._increment_dir.get(increment_dir)
@@ -256,58 +253,6 @@ class CloudStrmAce(_PluginBase):
                 if not any(parent_path.iterdir()):
                     shutil.rmtree(parent_path)
                     logger.warning(f"增量非保留目录 {parent_path} 已删除")
-    # def move_file(self,
-    #               file_path: Path,
-    #               dest_path: Path,
-    #               is_check_disk_space: bool = True,
-    #               min_free_space: int = 300,
-    #               wait_time: int = 300,
-    #               check_paths: Optional[List[Path]] = None,
-    #               ) -> bool:
-    #     """
-    #     移动文件,如果父文件夹为空,则删除空父文件夹
-    #     """
-    #     # 在目标路径存在时，会尝试覆盖它
-    #     if not file_path.exists():
-    #         logger.debug(f"move文件不存在,跳过处理: {file_path}")
-    #
-    #     if is_check_disk_space:
-    #         if not check_paths:
-    #             check_paths = [dest_path.parent]
-    #         check_paths.append(data_path)
-    #
-    #         for check_path in check_paths:
-    #             while check_disk_space(check_path, min_free_space):
-    #                 logger.warning(
-    #                     f"文件 {check_path} 空间不足,等待 {wait_time}s再处理:"
-    #                     f" {file_path}"
-    #                 )
-    #                 sleep(wait_time)
-    #
-    #     logger.debug(f"移动文件: {file_path} -> {dest_path}")
-    #
-    #     # # 改用copy2,避免移动文件夹时,程序中断导致文件丢失
-    #     # is_copyed = copy(file_path, dest_path)
-    #     # # 复制成功才继续执行
-    #     # if not is_copyed:
-    #     #     logger.warning(f"移动文件失败: {file_path} -> {dest_path}")
-    #     #     return False
-    #
-    #     # # 复制后再删除文件
-    #     # logger.debug(f"已复制文件:{file_path}, 正在删除文件: {file_path}")
-    #
-    #     try:
-    #         if not dest_path.parent.exists():
-    #             dest_path.parent.mkdir(parents=True, exist_ok=True)
-    #
-    #         cloud_str = "/mnt/cloud"
-    #         if str(file_path).startswith(cloud_str) and str(dest_path).startswith(
-    #                 cloud_str
-    #         ):
-    #             # 如果是云盘路径，则使用重命名
-    #             file_path.rename(dest_path)
-    #         else:
-    #             shutil.move(file_path, dest_path, copy_function=shutil.copy2)
 
     def __strm(self, source_file, increment_file):
         """
@@ -350,8 +295,7 @@ class CloudStrmAce(_PluginBase):
                         # 视频文件创建.strm文件
                         if Path(dest_file).suffix in [ext.strip() for ext in self._rmt_mediaext.split(",")]:
                             # 创建.strm文件
-                            self.__create_strm_file(scheme="https" if self._https else "http",
-                                                    dest_file=dest_file,
+                            self.__create_strm_file(dest_file=dest_file,
                                                     dest_dir=dest_dir,
                                                     source_file=source_file,
                                                     library_dir=library_dir,
@@ -371,7 +315,7 @@ class CloudStrmAce(_PluginBase):
     @staticmethod
     def __create_strm_file(dest_file: str, dest_dir: str, source_file: str, library_dir: str = None,
                            cloud_type: str = None, cloud_path: str = None, cloud_url: str = None,
-                           scheme: str = None, increment_file:str = None):
+                           increment_file:str = None):
         """
         生成strm文件
         :param library_dir:
@@ -405,18 +349,11 @@ class CloudStrmAce(_PluginBase):
                 dest_file = os.path.relpath(dest_file, cloud_path)
                 # 对盘符之后的所有内容进行url转码
                 dest_file = urllib.parse.quote(dest_file, safe='')
-                if str(cloud_type) == "cd2":
-                    # 将路径的开头盘符"/mnt/user/downloads"替换为"http://localhost:19798/static/http/localhost:19798/False/"
-                    dest_file = f"{scheme}://{cloud_url}/static/{scheme}/{cloud_url}/False/{dest_file}"
-                    logger.info(f"替换后cd2路径:::{dest_file}")
-                elif str(cloud_type) == "alist":
-                    dest_file = f"{scheme}://{cloud_url}/d/{dest_file}"
-                    logger.info(f"替换后alist路径:::{dest_file}")
-                    #os.remove(increment_file)
-                    #dest_file = dest_file.replace('http://192.168.1.205:5244/d/115', '100PB:', 1)
+                if str(cloud_type) == "alist":
+                    dest_file = f"{cloud_url}/{dest_file}"
                     logger.info(f"strm文件已生成，写入路径:::{dest_file}")
                 else:
-                    logger.error(f"云盘类型 {cloud_type} 错误")
+                    logger.error(f"云盘类型仅支持alist")
                     return
             else:
                 # 本地挂载路径转为emby路径
@@ -441,7 +378,6 @@ class CloudStrmAce(_PluginBase):
             "onlyonce": self._onlyonce,
             "ismove": self._ismove,
             "copy_files": self._copy_files,
-            "https": self._https,
             "cron": self._cron,
             "monitor_confs": self._monitor_confs,
             "no_del_dirs": self._no_del_dirs,
@@ -566,23 +502,7 @@ class CloudStrmAce(_PluginBase):
                                         }
                                     }
                                 ]
-                            },
-                            {
-                                'component': 'VCol',
-                                'props': {
-                                    'cols': 12,
-                                    'md': 2
-                                },
-                                'content': [
-                                    {
-                                        'component': 'VSwitch',
-                                        'props': {
-                                            'model': 'https',
-                                            'label': '启用https',
-                                        }
-                                    }
-                                ]
-                            },
+                            }
                         ]
                     },
                     {
@@ -706,8 +626,7 @@ class CloudStrmAce(_PluginBase):
                                             'variant': 'tonal',
                                             'text': '目录监控格式：'
                                                     '1.增量目录#监控目录#目的目录#媒体服务器内源文件路径；'
-                                                    '2.增量目录#监控目录#目的目录#cd2#cd2挂载本地跟路径#cd2服务地址；'
-                                                    '3.增量目录#监控目录#目的目录#alist#alist挂载本地跟路径#alist服务地址。'
+                                                    '2.增量目录#监控目录#目的目录#alist#alist挂载本地跟路径#alist服务地址。'
                                         }
                                     }
                                 ]
@@ -777,7 +696,6 @@ class CloudStrmAce(_PluginBase):
             "onlyonce": False,
             "ismove": True,
             "copy_files": False,
-            "https": False,
             "monitor_confs": "",
             "no_del_dirs": "",
             "rmt_mediaext": ".mp4, .mkv, .ts, .iso, .rmvb, .avi, .mov, .mpeg, .mpg, .wmv, .3gp, .asf, .m4v, .flv, .m2ts, .tp, .f4v",
