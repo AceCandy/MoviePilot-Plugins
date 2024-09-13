@@ -24,9 +24,9 @@
         "level": 1
     },
     "CloudStrmAce": {
-        "name": "云盘增量Strm增强",
-        "description": "定时扫描云盘文件，生成Strm文件（增量版）。",
-        "version": "0.7",
+        "name": "增量生成云盘Strm",
+        "description": "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录",
+        "version": "0.8",
         "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
         "author": "AceCandy",
         "level": 2
