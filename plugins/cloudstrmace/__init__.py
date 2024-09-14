@@ -22,7 +22,7 @@ class CloudStrmAce(_PluginBase):
     plugin_name = "增量生成云盘Strm"
     plugin_desc = "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.4"
+    plugin_version = "1.5"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "cloudstrmace_"
@@ -419,7 +419,7 @@ class CloudStrmAce(_PluginBase):
             for parent_path in increment_file_path.parents:
                 if parent_path.name in self._no_del_dirs:
                     break
-                if parent_path.name == increment_dir_path:
+                if parent_path == increment_dir_path:
                     break
                 if parent_path.parent == increment_file_path.root:
                     break
