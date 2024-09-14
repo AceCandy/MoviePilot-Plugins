@@ -22,7 +22,7 @@ class CloudStrmAce(_PluginBase):
     plugin_name = "增量生成云盘Strm"
     plugin_desc = "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.2"
+    plugin_version = "1.3"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "cloudstrmace_"
@@ -402,7 +402,7 @@ class CloudStrmAce(_PluginBase):
                     self.__strm(media_file, media_dir, cloud_dir, cloud_url)
                     #logger.info(f"增量文件 {increment_file} 处理完成")
                     # 判断当前媒体父路径下是否有媒体文件，如有则无需遍历父级
-                    self._clean_empty_parent_dirs(increment_file)
+                    self._clean_empty_parent_dirs(increment_file, increment_dir)
         logger.info(f"{self.plugin_name}任务完成>>>>>>>>>>>>>>>\n\n\n\n")
 
     def _is_valid_file(self, file_suffix):
@@ -412,9 +412,9 @@ class CloudStrmAce(_PluginBase):
             return False
         return True
 
-    def _clean_empty_parent_dirs(self, increment_file):
+    def _clean_empty_parent_dirs(self, increment_file, increment_dir):
         increment_file_path = Path(increment_file)
-        if not SystemUtils.exits_files(increment_file_path).parent, []):
+        if not SystemUtils.exits_files(increment_file_path.parent, []):
             for parent_path in list(increment_file_path.parents):
                 if parent_path.name in self._no_del_dirs:
                     break
