@@ -1,1 +1,12 @@
 test/
+
+# Intellij
+.idea
+.idea/
+*.iml
+*.iws
+*.log
+*.log.gz
+
+# Mac
+.DS_Store
