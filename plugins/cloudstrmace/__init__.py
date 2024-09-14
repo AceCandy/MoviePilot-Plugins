@@ -22,7 +22,7 @@ class CloudStrmAce(_PluginBase):
     plugin_name = "增量生成云盘Strm"
     plugin_desc = "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.5"
+    plugin_version = "1.6"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "cloudstrmace_"
@@ -81,8 +81,8 @@ class CloudStrmAce(_PluginBase):
                     continue
 
                 parts = monitor_conf.split("#")
-                if len(parts) == 4:
-                    self._monitor_items.append(MonitorItem(parts[0], parts[1], parts[2], parts[3]))
+                if len(parts) == 5:
+                    self._monitor_items.append(MonitorItem(parts[0], parts[1], parts[2], parts[3], parts[4]))
                 else:
                     logger.error(f"{monitor_conf} 格式错误")
                     continue
@@ -318,8 +318,9 @@ class CloudStrmAce(_PluginBase):
                                         'props': {
                                             'type': 'info',
                                             'variant': 'tonal',
-                                            'text': '目录监控格式：增量目录#媒体库目录#云盘目录#Strm前缀路径\n'
+                                            'text': '目录监控格式：增量目录#媒体库目录#云盘目录#Strm前缀路径#云盘根目录\n'
                                                     '通过监控增量目录的文件，转移到媒体库目录，然后将媒体库目录中的文件上传到云盘目录，生成的strm文件以Strm前缀路径开头\n'
+                                                    '生成的strm中通过云盘根目录进行剔除，比如/mnt/cd2/是根目录的话需要加上，否则可以加上/\n'
                                                     '如果增量目录和媒体库目录一致，则不用进行转移，不过每次会全量扫，建议配置不同的目录\n'
                                                     '媒体文件默认是移动到云盘目录中，原文件会消失并生成strm文件\n'
                                                     '非媒体文件默认是复制到云盘目录中，原文件不受影响\n'
@@ -375,9 +376,10 @@ class CloudStrmAce(_PluginBase):
             media_dir = monitor_item.media_dir
             cloud_dir = monitor_item.cloud_dir
             cloud_url = monitor_item.cloud_url
+            cloud_root = monitor_item.cloud_root
             logger.info(f"开始扫描增量目录 "
                         f"增量目录:{increment_dir} 媒体库目录:{media_dir} "
-                        f"云盘目录:{cloud_dir} Strm前缀路径:{cloud_url}")
+                        f"云盘目录:{cloud_dir} Strm前缀路径:{cloud_url} 云盘根目录:{cloud_root}")
             for root, dirs, files in os.walk(increment_dir):
                 for file in files:
                     increment_file = os.path.join(root, file)
@@ -399,7 +401,7 @@ class CloudStrmAce(_PluginBase):
                         Path(media_file).parent.mkdir(parents=True, exist_ok=True)
                         shutil.move(increment_file, media_file, copy_function=shutil.copy2)
                     # 扫描云盘文件生成strm，需要先判断是否有对应strm
-                    self.__strm(media_file, media_dir, cloud_dir, cloud_url)
+                    self.__strm(media_file, media_dir, cloud_dir, cloud_url, cloud_root)
                     #logger.info(f"增量文件 {increment_file} 处理完成")
                     # 判断当前媒体父路径下是否有媒体文件，如有则无需遍历父级
                     self._clean_empty_parent_dirs(increment_file, increment_dir)
@@ -430,7 +432,7 @@ class CloudStrmAce(_PluginBase):
                     logger.warn(f"增量非保留目录 {parent_path} 已删除")
 
     # 扫描云盘文件生成strm，需要先判断是否有对应strm
-    def __strm(self, media_file, media_dir, cloud_dir, cloud_url):
+    def __strm(self, media_file, media_dir, cloud_dir, cloud_url, cloud_root):
         # 非保留文件（视频+非媒体）直接跳过
         file_suffix = Path(media_file).suffix
         if not self._is_valid_file(file_suffix):
@@ -453,7 +455,7 @@ class CloudStrmAce(_PluginBase):
                 # 移动文件到云盘目录
                 shutil.move(media_file, cloud_file, copy_function=shutil.copy2)
                 # 创建.strm文件
-                self.__create_strm_file(media_file, cloud_file, cloud_url)
+                self.__create_strm_file(media_file, cloud_file, cloud_url, cloud_root)
             elif self._copy_files and file_suffix in self.nomedia_exts:
                 # 其他nfo、jpg等复制文件
                 shutil.copy2(media_file, cloud_file)
@@ -464,7 +466,7 @@ class CloudStrmAce(_PluginBase):
 
     # 生成strm文件
     @staticmethod
-    def __create_strm_file(media_file, cloud_file, cloud_url):
+    def __create_strm_file(media_file, cloud_file, cloud_url, cloud_root):
         try:
             # 获取视频文件名和父目录
             media_file_path = Path(media_file)
@@ -481,7 +483,7 @@ class CloudStrmAce(_PluginBase):
             # 云盘模式
             if cloud_url.startswith("http"):
                 # 替换路径中的\为/
-                cloud_file = urllib.parse.quote(cloud_file.replace("\\", "/"), safe='')
+                cloud_file = urllib.parse.quote(cloud_file.replace(cloud_root, '').replace("\\", "/"), safe='')
                 cloud_url = f"{cloud_url}/{cloud_file}"
                 logger.info(f"[云盘]strm文件中路径 >> {cloud_url}")
             else:
@@ -498,8 +500,9 @@ class CloudStrmAce(_PluginBase):
 
 
 class MonitorItem:
-    def __init__(self, increment_dir, media_dir, cloud_dir, cloud_url):
+    def __init__(self, increment_dir, media_dir, cloud_dir, cloud_url, cloud_root):
         self.increment_dir = increment_dir
         self.media_dir = media_dir
         self.cloud_dir = cloud_dir
         self.cloud_url = cloud_url
+        self.cloud_root = cloud_root
