@@ -22,7 +22,7 @@ class CloudStrmAce(_PluginBase):
     plugin_name = "增量生成云盘Strm"
     plugin_desc = "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.3"
+    plugin_version = "1.4"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "cloudstrmace_"
@@ -414,18 +414,20 @@ class CloudStrmAce(_PluginBase):
 
     def _clean_empty_parent_dirs(self, increment_file, increment_dir):
         increment_file_path = Path(increment_file)
+        increment_dir_path = Path(increment_dir)
         if not SystemUtils.exits_files(increment_file_path.parent, []):
-            for parent_path in list(increment_file_path.parents):
+            for parent_path in increment_file_path.parents:
                 if parent_path.name in self._no_del_dirs:
                     break
-                if parent_path.name == increment_dir:
+                if parent_path.name == increment_dir_path:
                     break
-                if parent_path.parent != Path(increment_file).root:
-                    # 父目录非根目录，才删除父目录
-                    if not SystemUtils.exits_files(parent_path, []):
-                        # 当前路径下没有媒体文件则删除
-                        shutil.rmtree(parent_path)
-                        logger.warn(f"增量非保留目录 {parent_path} 已删除")
+                if parent_path.parent == increment_file_path.root:
+                    break
+                # 父目录非根目录，才删除父目录
+                if not SystemUtils.exits_files(parent_path, []):
+                    # 当前路径下没有媒体文件则删除
+                    shutil.rmtree(parent_path)
+                    logger.warn(f"增量非保留目录 {parent_path} 已删除")
 
     # 扫描云盘文件生成strm，需要先判断是否有对应strm
     def __strm(self, media_file, media_dir, cloud_dir, cloud_url):
