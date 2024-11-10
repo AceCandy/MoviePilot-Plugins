@@ -25,10 +25,12 @@
     },
     "CloudStrmAce": {
         "name": "增量生成云盘Strm",
+        "labels": "云盘",
         "description": "监控本地增量目录，转移到媒体目录，并生成Strm文件上传到云盘目录",
         "version": "1.6",
         "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
         "author": "AceCandy",
-        "level": 2
+        "level": 1,
+        "v2": true
     }
 }
