@@ -57,11 +57,11 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件名称
     plugin_name = "短剧刮削(PT)"
     # 插件描述
-    plugin_desc = "借鉴thsrite佬之后修改更适合自己使用的只通过pt站刮削的短剧插件"
+    plugin_desc = "纯粹通过pt站刮削的短剧插件"
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.0.0"
+    plugin_version = "1.0.1"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -357,9 +357,12 @@ class ShortPlayMonitorPt(_PluginBase):
         poster_path = parent_dir / "poster.jpg"
 
         # 获取页面源代码
-        page_source = self.__get_page_source(url=self._get_site_url(title), site=self._get_site())
+        site_info = self._get_site_info(title=title)
         # 解析站点信息
-        poster_url, new_title, year, description = self._parse_site_info(page_source)
+        poster_url = site_info[poster_url]
+        new_title = site_info[new_title]
+        year = site_info[year]
+        description = site_info[description]
 
         if new_title:
             title = new_title
@@ -554,10 +557,20 @@ class ShortPlayMonitorPt(_PluginBase):
             # 获取简介
             description_elements = html.xpath('//div[@id="kdescr"]/text()[contains(., "◎简　　介")]/following-sibling::text()')
             description = ''.join(description_elements).strip()
-            return poster_url, title, year, description
+            return {
+                "poster_url": poster_url,
+                "new_title": title,
+                "year": year,
+                "description": description
+            }
         except Exception as e:
             logger.error(f"解析站点信息失败: {str(e)}")
-            return [], "", "", ""
+            return {
+                "poster_url": "",
+                "new_title": "",
+                "year": "",
+                "description": ""
+            }
 
 
     def gen_file_thumb_from_site(self, title: str, file_path: Path):
@@ -565,8 +578,8 @@ class ShortPlayMonitorPt(_PluginBase):
         从agsv或者萝莉站查询封面
         """
         try:
-            image = self._get_site_image(title)
-            if not image:
+            site_info = self._get_site_info(title)
+            if not site_info or not site_info["poster_url"]:
                 logger.error(f"检索站点 {title} 封面失败")
                 return None
 
@@ -577,24 +590,25 @@ class ShortPlayMonitorPt(_PluginBase):
             logger.error(f"检索站点 {title} 封面失败 {str(e)}")
             return None
 
-    def _get_site_image(self, title):
+    def _get_site_info(self, title):
         if title in self._site_image_cache:
             return self._site_image_cache[title]
         sites = [
             ("agsvpt.com", 419),
-            ("ilolicon.com", 402)
+#             ("ilolicon.com", 402)
         ]
         for domain, cat in sites:
             site = SiteOper().get_by_domain(domain)
             index = SitesHelper().get_indexer(domain)
             if site:
                 req_url = f"https://www.{domain}/torrents.php?search_mode=0&search_area=0&page=0&notnewword=1&cat={cat}&search={title}"
-                image_xpath = "//*[@id='kdescr']/img[1]/@src"
                 logger.info(f"开始检索 {site.name} {title}")
-                image = self.__get_site_torrents(url=req_url, site=site, image_xpath=image_xpath, index=index)
-                if image:
-                    self._site_image_cache[title] = image
-                    return image
+                page_source = self.__get_site_torrents(url=req_url, site=site, index=index)
+                if page_source:
+                    site_info = self._parse_site_info(page_source)
+                    if site_info["poster_url"]:
+                        self._site_image_cache[title] = site_info
+                        return site_info
         self._site_image_cache[title] = None
         return None
 
@@ -619,7 +633,7 @@ class ShortPlayMonitorPt(_PluginBase):
             logger.error(f"{file_path.stem}图片下载失败：{str(err)}")
             return False
 
-    def __get_site_torrents(self, url: str, site, image_xpath, index):
+    def __get_site_torrents(self, url: str, site, index):
         """
         查询站点资源
         """
@@ -644,8 +658,7 @@ class ShortPlayMonitorPt(_PluginBase):
             logger.error(f"请求种子详情页失败 {torrents[0].get('page_url')}")
             return None
 
-        images = html.xpath(image_xpath)
-        return images[0] if images else None
+        return html
 
     def __get_page_source(self, url: str, site):
         """
