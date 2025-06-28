@@ -61,7 +61,7 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.0.5"
+    plugin_version = "1.0.6"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -546,7 +546,8 @@ class ShortPlayMonitorPt(_PluginBase):
         """
         try:
             # 获取所有图片链接
-            poster_url = html.xpath('//div[@id="kdescr"]/img[1]/@src')
+            poster_url_list = html.xpath('//div[@id="kdescr"]/img[1]/@src')
+            poster_url = poster_url_list[0] if poster_url_list else ''
             # 获取片名
             title = html.xpath('string(//div[@id="kdescr"]/text()[contains(., "◎片　　名")])')
             title = title.replace("◎片　　名　", "").strip()
@@ -582,7 +583,7 @@ class ShortPlayMonitorPt(_PluginBase):
                 logger.error(f"检索站点 {title} 封面失败")
                 return None
 
-            if self.__save_image(url=image, file_path=file_path):
+            if self.__save_image(url=site_info["poster_url"], file_path=file_path):
                 return file_path
             return None
         except Exception as e:
