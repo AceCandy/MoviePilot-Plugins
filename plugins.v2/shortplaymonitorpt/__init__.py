@@ -61,7 +61,7 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.0.1"
+    plugin_version = "1.0.2"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -274,7 +274,7 @@ class ShortPlayMonitorPt(_PluginBase):
                 return
 
             target_path = event_path.replace(source_dir, dest_dir)
-            title = self._rename_path(target_path, dest_dir)
+            title, target_path = self._rename_path(target_path, dest_dir)
             self._process_path(is_directory, target_path, event_path, title)
 
             if self._notify and title:
@@ -294,7 +294,7 @@ class ShortPlayMonitorPt(_PluginBase):
         parent_dir = relative_path.parent
         title = parent_dir.name.split(".")[0]
         new_relative_path = Path(title) / relative_path.name
-        return Path(dest_dir) / new_relative_path
+        return title, Path(dest_dir) / new_relative_path
 
     def _create_directory_if_not_exists(self, dir_path: Path):
         """
