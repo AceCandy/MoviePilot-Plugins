@@ -61,7 +61,7 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.0.4"
+    plugin_version = "1.0.5"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -618,7 +618,7 @@ class ShortPlayMonitorPt(_PluginBase):
         """
         try:
             logger.info(f"正在下载{file_path.stem}图片：{url} ...")
-            r = RequestUtils().get_res(url=url, proxies=settings.PROXY, raise_exception=True)
+            r = RequestUtils(proxies=settings.PROXY).get_res(url=url, raise_exception=True)
             if r:
                 file_path.write_bytes(r.content)
                 logger.info(f"图片已保存：{file_path}")
