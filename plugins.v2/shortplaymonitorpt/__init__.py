@@ -359,10 +359,10 @@ class ShortPlayMonitorPt(_PluginBase):
         # 获取页面源代码
         site_info = self._get_site_info(title=title)
         # 解析站点信息
-        poster_url = site_info[poster_url]
-        new_title = site_info[new_title]
-        year = site_info[year]
-        description = site_info[description]
+        poster_url = site_info["poster_url"]
+        new_title = site_info["new_title"]
+        year = site_info["year"]
+        description = site_info["description"]
 
         if new_title:
             title = new_title
