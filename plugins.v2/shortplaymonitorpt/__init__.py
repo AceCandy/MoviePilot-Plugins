@@ -61,7 +61,7 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.0.6"
+    plugin_version = "1.0.7"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -376,7 +376,10 @@ class ShortPlayMonitorPt(_PluginBase):
                 logger.error(f"生成 {nfo_path} NFO 文件失败: {str(e)}")
 
         # 生成海报
-        if not poster_path.exists() and poster_url:
+        if poster_path.exists():
+            return
+
+        if poster_url:
             try:
                 if self.__save_image(url=poster_url, file_path=poster_path):
                     logger.info(f"{poster_path} 海报已使用站点图片生成")

@@ -3,11 +3,12 @@
     "name": "短剧刮削(PT)",
     "description": "纯粹通过pt站刮削的短剧插件",
     "labels": "刮削",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
     "author": "AceCandy",
     "level": 1,
     "history": {
+      "v1.0.7": "避免重复下载封面",
       "v1.0.6": "赛博修复",
       "v1.0.5": "图片下载失败",
       "v1.0.4": "图片命名错误修复",
