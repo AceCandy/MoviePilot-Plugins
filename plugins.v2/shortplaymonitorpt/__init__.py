@@ -61,7 +61,7 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.0.2"
+    plugin_version = "1.0.3"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -538,14 +538,13 @@ class ShortPlayMonitorPt(_PluginBase):
         file_path.write_bytes(xml_str)
         logger.info(f"NFO文件已保存：{file_path}")
 
-    def _parse_site_info(self, page_source):
+    def _parse_site_info(self, html):
         """
         从页面源代码中解析封面图片链接、片名、年代和简介
         :param page_source: 页面源代码
         :return: 封面图片链接、片名、年代、简介
         """
         try:
-            html = etree.HTML(page_source)
             # 获取所有图片链接
             poster_url = html.xpath('//div[@id="kdescr"]/img[1]/@src')
             # 获取片名
