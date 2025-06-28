@@ -1,2 +1,14 @@
 {
+  "ShortPlayMonitorPt": {
+    "name": "短剧刮削(PT)",
+    "description": "借鉴thsrite佬之后修改更适合自己使用的只通过pt站刮削的短剧插件",
+    "labels": "刮削",
+    "version": "1.0.0",
+    "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
+    "author": "AceCandy",
+    "level": 1,
+    "history": {
+      "v1.0.0": "初始化版本"
+    }
+  }
 }
