@@ -16,7 +16,7 @@ from requests import RequestException
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from watchdog.observers.polling import PollingObserver
-from app.helper.sites import SitesHelper, SiteSpider
+from app.helper.sites import SitesHelper
 
 from app.core.config import settings
 from app.core.meta.words import WordsMatcher
@@ -61,7 +61,7 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.0.7"
+    plugin_version = "1.0.8"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
