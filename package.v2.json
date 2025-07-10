@@ -3,7 +3,7 @@
     "name": "短剧刮削(PT)",
     "description": "纯粹通过pt站刮削的短剧插件",
     "labels": "刮削",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
     "author": "AceCandy",
     "level": 1,
