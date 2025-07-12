@@ -37,7 +37,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
     plugin_name = "短剧刮削(补偿)"
     plugin_desc = "原地补偿未刮削数据"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.0.0"
+    plugin_version = "1.0.1"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "shortplaymonitorcompensate_"
@@ -100,6 +100,11 @@ class ShortPlayMonitorCompensate(_PluginBase):
             "enabled": self._enabled,
             "monitor_confs": self._monitor_confs
         })
+
+        # 启动任务
+        if self._scheduler.get_jobs():
+            self._scheduler.print_jobs()
+            self._scheduler.start()
 
     def sync_all(self):
         """
