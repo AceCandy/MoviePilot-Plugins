@@ -37,7 +37,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
     plugin_name = "短剧刮削(补偿)"
     plugin_desc = "原地补偿未刮削数据"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.0.2"
+    plugin_version = "1.0.3"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "shortplaymonitorcompensate_"
@@ -174,7 +174,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
         return target_path
 
     def _generate_nfo_and_thumb(self, target_path):
-        parent_dir = target_path.parent
+        parent_dir = target_path
         nfo_path = parent_dir / "tvshow.nfo"
         poster_path = parent_dir / "poster.jpg"
         if nfo_path.exists() and poster_path.exists():
@@ -214,7 +214,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
             # 尝试生成缩略图
             thumb_path = self.gen_file_thumb(
                 title=title,
-                file_path=target_path
+                file_path=parent_dir
             )
             if thumb_path and thumb_path.exists():
                 try:
@@ -234,7 +234,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
             else:
                 # 查找已有的缩略图文件
                 thumb_files = SystemUtils.list_files(
-                    directory=parent_dir,
+                    directory=target_path,
                     extensions=[".jpg"]
                 )
                 if thumb_files:
