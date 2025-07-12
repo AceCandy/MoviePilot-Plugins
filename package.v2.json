@@ -14,5 +14,17 @@
       "v1.0.1": "支持agsvpt刮削",
       "v1.0.0": "初始化版本"
     }
+  },
+  "ShortPlayMonitorCompensate": {
+    "name": "短剧刮削(补偿)",
+    "description": "原地补偿未刮削数据",
+    "labels": "刮削",
+    "version": "1.0.0",
+    "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
+    "author": "AceCandy",
+    "level": 2,
+    "history": {
+      "v1.0.0": "调试版本"
+    }
   }
 }
