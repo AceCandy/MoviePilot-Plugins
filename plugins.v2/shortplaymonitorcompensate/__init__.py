@@ -37,7 +37,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
     plugin_name = "短剧刮削(补偿)"
     plugin_desc = "原地补偿未刮削数据"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.0.3"
+    plugin_version = "1.0.4"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "shortplaymonitorcompensate_"
@@ -183,6 +183,9 @@ class ShortPlayMonitorCompensate(_PluginBase):
         # 获取页面源代码
         title = target_path.name
         site_info = self._get_site_info(title=title)
+        if not site_info:
+            logger.error(f"未找到 {title} 的刮削信息")
+            return
         # 解析站点信息
         poster_url = site_info["poster_url"]
         new_title = site_info["new_title"]

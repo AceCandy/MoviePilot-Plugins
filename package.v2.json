@@ -3,11 +3,12 @@
     "name": "短剧刮削(PT)",
     "description": "纯粹通过pt站刮削的短剧插件",
     "labels": "刮削",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
     "author": "AceCandy",
     "level": 2,
     "history": {
+      "v1.1.2": "修复搜索失败导致任务中断的问题",
       "v1.1.1": "精准名称匹配",
       "v1.1.0": "修复siteSpider依赖",
       "v1.0.4": "避免图片下载失败",
@@ -20,11 +21,12 @@
     "name": "短剧刮削(补偿)",
     "description": "原地补偿未刮削数据",
     "labels": "刮削",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
     "author": "AceCandy",
     "level": 2,
     "history": {
+      "v1.0.4": "修复搜索失败导致任务中断的问题",
       "v1.0.3": "修复路径异常",
       "v1.0.2": "第一个可使用版本",
       "v1.0.0": "调试版本"
