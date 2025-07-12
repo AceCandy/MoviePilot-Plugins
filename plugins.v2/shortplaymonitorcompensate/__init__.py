@@ -37,7 +37,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
     plugin_name = "短剧刮削(补偿)"
     plugin_desc = "原地补偿未刮削数据"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.0.1"
+    plugin_version = "1.0.2"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "shortplaymonitorcompensate_"
@@ -183,7 +183,6 @@ class ShortPlayMonitorCompensate(_PluginBase):
         # 获取页面源代码
         title = target_path.name
         site_info = self._get_site_info(title=title)
-        return
         # 解析站点信息
         poster_url = site_info["poster_url"]
         new_title = site_info["new_title"]
@@ -372,7 +371,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
             if site:
                 req_url = f"https://www.{domain}/torrents.php?search_mode=0&search_area=0&page=0&notnewword=1&cat={cat}&search={title}"
                 logger.info(f"开始检索 {site.name} {title}")
-                page_source = self.__get_site_torrents(url=req_url, site=site, index=index)
+                page_source = self.__get_site_torrents(url=req_url, site=site, index=index, title=title)
                 if page_source:
                     site_info = self._parse_site_info(page_source)
                     if site_info["poster_url"]:
@@ -402,34 +401,51 @@ class ShortPlayMonitorCompensate(_PluginBase):
             logger.error(f"{file_path.stem}图片下载失败：{str(err)}")
             return False
 
-    def __get_site_torrents(self, url: str, site, index):
+    def __get_site_torrents(self, url: str, site, index, title):
         """
         查询站点资源
         """
         page_source = self.__get_page_source(url=url, site=site)
         if not page_source:
-            logger.error(f"请求站点 {site.name} 失败")
+            logger.error(f"请求站点 {site.name} 失败，URL: {url}")
             return None
-        logger.info(f"page_source: {page_source}")
 
         _spider = SiteSpider(indexer=index, page=1)
         torrents = _spider.parse(page_source)
         if not torrents:
-            logger.error(f"未检索到站点 {site.name} 资源")
+            logger.error(f"未检索到站点 {site.name} 资源，URL: {url}")
             return None
-        logger.info(f"torrents: {torrents}")
 
-        torrent_detail_source = self.__get_page_source(url=torrents[0].get("page_url"), site=site)
+        # 初始化匹配的索引为 -1
+        matched_index = -1
+        # 遍历 torrents 列表
+        for i, torrent in enumerate(torrents):
+            description = torrent.get("description", "")
+            # 提取 description 中以 | 分隔的第一个字符串
+            first_part = description.split("|")[0].strip()
+            if first_part == title:
+                matched_index = i
+                break
+
+        # 如果找到匹配项
+        if matched_index == -1:
+            logger.error(f"未找到精确匹配 【{title}】 的种子，站点: {site.name}，URL: {url}")
+            return None
+
+        torrent_url = torrents[matched_index].get("page_url")
+        torrent_detail_source = self.__get_page_source(url=torrent_url, site=site)
         if not torrent_detail_source:
-            logger.error(f"请求种子详情页失败 {torrents[0].get('page_url')}")
+            logger.error(f"请求种子详情页失败，URL: {torrent_url}，站点: {site.name}")
             return None
-        logger.info(f"torrent_detail_source: {torrent_detail_source}")
 
-        html = etree.HTML(torrent_detail_source)
-        if not html:
-            logger.error(f"请求种子详情页失败 {torrents[0].get('page_url')}")
+        try:
+            html = etree.HTML(torrent_detail_source)
+            if not html:
+                logger.error(f"种子详情页 {torrent_url} 无有效 HTML 内容，站点: {site.name}")
+                return None
+        except Exception as e:
+            logger.error(f"解析种子详情页 {torrent_url} 时出错，错误信息: {str(e)}，站点: {site.name}")
             return None
-        logger.info(f"html: {html}")
 
         return html
 
@@ -545,7 +561,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
                                             'model': 'monitor_confs',
                                             'label': '补偿目录',
                                             'rows': 5,
-                                            'placeholder': '填写docker中绝对地址目录，一行一个'
+                                            'placeholder': '填写docker中绝对地址目录（实际短剧的父级目录），一行一个'
                                         }
                                     }
                                 ]
