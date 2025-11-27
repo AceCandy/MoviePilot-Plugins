@@ -37,7 +37,7 @@ class ShortPlayMonitorCompensate(_PluginBase):
     plugin_name = "短剧刮削(补偿)"
     plugin_desc = "原地补偿未刮削数据"
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
-    plugin_version = "1.0.4"
+    plugin_version = "1.0.5"
     plugin_author = "AceCandy"
     author_url = "https://github.com/AceCandy"
     plugin_config_prefix = "shortplaymonitorcompensate_"
@@ -365,14 +365,14 @@ class ShortPlayMonitorCompensate(_PluginBase):
         if title in self._site_image_cache:
             return self._site_image_cache[title]
         sites = [
-            ("agsvpt.com", 419),
+            ("pt.agsvpt.cn", 419),
 #             ("ilolicon.com", 402)
         ]
         for domain, cat in sites:
             site = SiteOper().get_by_domain(domain)
             index = SitesHelper().get_indexer(domain)
             if site:
-                req_url = f"https://www.{domain}/torrents.php?search_mode=0&search_area=0&page=0&notnewword=1&cat={cat}&search={title}"
+                req_url = f"https://{domain}/torrents.php?search_mode=0&search_area=0&page=0&notnewword=1&cat={cat}&search={title}"
                 logger.info(f"开始检索 {site.name} {title}")
                 page_source = self.__get_site_torrents(url=req_url, site=site, index=index, title=title)
                 if page_source:
