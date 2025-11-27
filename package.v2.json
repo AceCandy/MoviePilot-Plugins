@@ -22,11 +22,12 @@
     "name": "短剧刮削(补偿)",
     "description": "原地补偿未刮削数据",
     "labels": "刮削",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "icon": "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png",
     "author": "AceCandy",
     "level": 2,
     "history": {
+      "v1.0.5": "修复域名",
       "v1.0.4": "修复搜索失败导致任务中断的问题",
       "v1.0.3": "修复路径异常",
       "v1.0.2": "第一个可使用版本",
