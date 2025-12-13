@@ -62,7 +62,7 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.1.3"
+    plugin_version = "1.1.4"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -601,14 +601,14 @@ class ShortPlayMonitorPt(_PluginBase):
         if title in self._site_image_cache:
             return self._site_image_cache[title]
         sites = [
-            ("pt.agsvpt.cn", 419),
+            ("agsvpt.com", "pt.agsvpt.cn", 419),
 #             ("www.ilolicon.com", 402)
         ]
-        for domain, cat in sites:
+        for domain, alias, cat in sites:
             site = SiteOper().get_by_domain(domain)
             index = SitesHelper().get_indexer(domain)
             if site:
-                req_url = f"https://{domain}/torrents.php?search_mode=0&search_area=0&page=0&notnewword=1&cat={cat}&search={title}"
+                req_url = f"https://{alias}/torrents.php?search_mode=0&search_area=0&page=0&notnewword=1&cat={cat}&search={title}"
                 logger.info(f"开始检索 {site.name} {title}")
                 page_source = self.__get_site_torrents(url=req_url, site=site, index=index, title=title)
                 if page_source:
