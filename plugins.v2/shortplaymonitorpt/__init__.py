@@ -62,7 +62,7 @@ class ShortPlayMonitorPt(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/thsrite/MoviePilot-Plugins/main/icons/create.png"
     # 插件版本
-    plugin_version = "1.1.4"
+    plugin_version = "1.1.5"
     # 插件作者
     plugin_author = "AceCandy"
     # 作者主页
@@ -291,9 +291,15 @@ class ShortPlayMonitorPt(_PluginBase):
         :param dest_dir: 目标目录
         :return: 重命名后的路径
         """
+        season_pattern = re.compile(r"第\d+季")
+        
         relative_path = Path(target_path).relative_to(dest_dir)
         parent_dir = relative_path.parent
-        title = parent_dir.name.split(".")[0]
+        parent_dir_name = parent_dir.name
+        title = parent_dir_name.split(".")[0]
+        if season_pattern.search(parent_dir_name):
+            season_str = parent_dir_name.split(".")[1]
+            title = f"{title} {season_str}" 
         new_relative_path = Path(title) / relative_path.name
         return title, Path(dest_dir) / new_relative_path
 
